@@ -132,10 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
         reviewCountBadge.textContent = pool.length;
     }
 
-    // ==================== 🛠️ 全問題列挙型プール生成（コア） ====================
+    // ==================== 🛠️ 全問題列挙型プール生成 ====================
     function generateAllProblemPool(opMode, rangeMode) {
         let pool = [];
         let ops = [];
+
+        const isMushikuiMode = opMode.startsWith('mushikui-');
 
         if (opMode === 'rand-pm' || opMode === 'mushikui-pm') ops = ['+', '-'];
         else if (opMode === 'rand-md' || opMode === 'mushikui-pd') ops = ['*', '/'];
@@ -161,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let kMax = isPositiveOnly ? 10 : 10;
                 for (let n1 = kMin; n1 <= kMax; n1++) {
                     for (let n2 = kMin; n2 <= kMax; n2++) {
+                        if (isMushikuiMode && (n1 === 0 || n2 === 0)) continue;
                         pool.push({ num1: n1, num2: n2, op: op });
                     }
                 }
@@ -173,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (let div = dMinDiv; div <= dMaxDiv; div++) {
                     if (div === 0) continue;
                     for (let ans = dMinAns; ans <= dMaxAns; ans++) {
+                        if (isMushikuiMode && ans === 0) continue;
                         pool.push({ num1: ans * div, num2: div, op: op });
                     }
                 }
@@ -181,22 +185,32 @@ document.addEventListener('DOMContentLoaded', () => {
         return pool;
     }
 
-    // 過去3回の総合ミス数を評価した3段階段階的ウエイト算出
+    // 【Sakumaさん設計案：-1, 0, 1 システムをフル活用した高度ウエイト判定】
     function getProblemWeight(num1, op, num2, blankType) {
         const questionStats = JSON.parse(localStorage.getItem('calc_question_stats')) || {};
         const key = `${num1}_${op}_${num2}`;
         
         if (!questionStats[key] || !questionStats[key][blankType] || questionStats[key][blankType].length === 0) {
-            return 3; // 未解答（ベースラインウエイト: 3）
+            return 3; // 未解答（ベースライン: 3）
         }
         
-        const history = questionStats[key][blankType]; 
-        const wrongCount = history.filter(result => result === 0).length;
+        const history = questionStats[key][blankType]; // [-1, 0, 1] が混ざった配列
         
-        if (wrongCount === 3) return 15; // 3連続ミス（最優先）
-        else if (wrongCount === 2) return 8;  // 3回中2回ミス
-        else if (wrongCount === 1) return 4;  // 3回中1回ミス
-        else return 1;  // 克服済み（低確率）
+        // 直近3回の中の各ステータス数を集計
+        const absoluteWrongCount = history.filter(val => val === -1).length; // 解き直せなかった完全不正解
+        const revengedWrongCount = history.filter(val => val === 0).length;  // 解き直して正解したミス
+
+        // 重み付けアルゴリズム
+        if (absoluteWrongCount > 0) {
+            // 過去3回の中に1回でも「解き直せなかった完全な不正解(-1)」がある場合 ➔ 最優先ロックオン
+            return 15 + (absoluteWrongCount * 5); 
+        } else if (revengedWrongCount > 0) {
+            // ミスはしたけどその場で直せた(0)履歴がある場合 ➔ ちょっと苦手警戒モード
+            return 4 + revengedWrongCount; 
+        } else {
+            // すべて一発正解(1)の場合 ➔ 克服済みセーフモード
+            return 1; 
+        }
     }
 
     // アダプティブ問題自動抽選エンジン
@@ -207,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let extendedPool = [];
         basePool.forEach(item => {
             if (isMushikui) {
-                const bTypes = ['l', 'r'];
+                const bTypes = ['l', 'r', 'a'];
                 bTypes.forEach(b => {
                     extendedPool.push({
                         num1: item.num1, num2: item.num2, op: item.op, blankType: b,
@@ -284,7 +298,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentRoundWrongPool = []; 
 
         if (currentAppMode === "normal") {
-            // カウントダウンが回る前に裏で完全ビルド（待ち時間解消）
             problemsList = generateAdaptiveQuestions(lastPlayedOp, lastPlayedRange, totalQuestions);
             totalQuestions = problemsList.length;
         } else {
@@ -328,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timerDisplay.classList.remove('hidden');
             startTime = Date.now();
             updateTimerText();
-            timerInterval = setInterval(updateTimerText, 100);
+            timerInterval = setInterval(updateTimerText, 100); 
         } else {
             timerDisplay.textContent = "復習モード"; 
         }
@@ -344,9 +357,10 @@ document.addEventListener('DOMContentLoaded', () => {
         timerDisplay.textContent = "復習モード";
     }
 
+    // 【秒数整数表示化】
     function updateTimerText() {
         if (currentAppMode === "review") return;
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
         timerDisplay.textContent = `${elapsed}秒`;
     }
 
@@ -441,6 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
         answerInputBox.textContent = userTypedInput;
     }
 
+    // 【-1, 0, 1 変位システム完全実装＋重複保存ガード】
     function evaluateUserAnswer() {
         if (userTypedInput === "" || userTypedInput === "-") return;
         const userAnsInt = parseInt(userTypedInput);
@@ -454,9 +469,13 @@ document.addEventListener('DOMContentLoaded', () => {
             audioCorrect.play();
             triggerFeedback('◯');
 
-            // 初回挑戦時（ノーミス時）のみ「正解(1)」を過去履歴へプッシュ
-            if (!isCurrentProblemWrongOnce) {
-                updateQuestionStatsDatabase(statsKey, bKey, 1);
+            // ─── 正解時のスコアリング ───
+            if (isCurrentProblemWrongOnce) {
+                // すでに間違えていた場合は、1回目に突っ込んだ「-1」を「0（その場でリベンジ成功）」に上書き！
+                updateQuestionStatsDatabase(statsKey, bKey, 0, true); 
+            } else {
+                // 初見一発正解なら、文句なしの「1（完全正解）」を追加
+                updateQuestionStatsDatabase(statsKey, bKey, 1, false);
                 if (currentAppMode === "review") {
                     removeProblemFromPersistentPool(currentProb);
                 }
@@ -473,25 +492,29 @@ document.addEventListener('DOMContentLoaded', () => {
             triggerFeedback('×');
             wrongCount++;
 
-            // 初回挑戦でのミス時のみ「不正解(0)」を過去履歴へプッシュ（重複処理スキップ）
+            // ─── 不正解時のスコアリング ───
             if (!isCurrentProblemWrongOnce) {
-                updateQuestionStatsDatabase(statsKey, bKey, 0);
-            }
-            isCurrentProblemWrongOnce = true;
-
-            if (currentAppMode === "normal") {
-                if (!currentRoundWrongPool.some(p => p.num1 === currentProb.num1 && p.num2 === currentProb.num2 && p.op === currentProb.op && p.blankType === currentProb.blankType)) {
-                    currentRoundWrongPool.push(currentProb);
+                // 初めて間違えた瞬間（初手ミス）だけ、履歴データベースに「-1（未解決ミス）」を追加
+                updateQuestionStatsDatabase(statsKey, bKey, -1, false);
+                
+                // 通常モード時のみ、間違いプール（復習用）へ1件だけ永続ストック（2回目以降のミスでの重複プッシュを完全に排除）
+                if (currentAppMode === "normal") {
+                    if (!currentRoundWrongPool.some(p => p.num1 === currentProb.num1 && p.num2 === currentProb.num2 && p.op === currentProb.op && p.blankType === currentProb.blankType)) {
+                        currentRoundWrongPool.push(currentProb);
+                    }
+                    saveProblemToPersistentPool(currentProb); 
                 }
-                saveProblemToPersistentPool(currentProb);
             }
+            // 2回目、3回目の連続ミス時は上のif文をスルーするため、LocalStorageへの多重書き込みは一切発生しません。
 
+            isCurrentProblemWrongOnce = true;
             userTypedInput = "";
             answerInputBox.textContent = "";
         }
     }
 
-    function updateQuestionStatsDatabase(key, blankType, resultValue) {
+    // 履歴データベース更新用関数（上書き対応版）
+    function updateQuestionStatsDatabase(key, blankType, resultValue, isOverwrite = false) {
         let questionStats = JSON.parse(localStorage.getItem('calc_question_stats')) || {};
         if (!questionStats[key]) {
             questionStats[key] = { a: [], l: [], r: [] };
@@ -500,9 +523,15 @@ document.addEventListener('DOMContentLoaded', () => {
             questionStats[key][blankType] = [];
         }
         
-        questionStats[key][blankType].push(resultValue);
-        if (questionStats[key][blankType].length > 3) {
-            questionStats[key][blankType].shift(); 
+        if (isOverwrite && questionStats[key][blankType].length > 0) {
+            // 解き直し正解による「0」への上書き要求の場合、配列の最後尾（さっき入れた-1）を書き換える
+            questionStats[key][blankType][questionStats[key][blankType].length - 1] = resultValue;
+        } else {
+            // 通常の新規追加（初手正解の1、または初手ミスの-1）
+            questionStats[key][blankType].push(resultValue);
+            if (questionStats[key][blankType].length > 3) {
+                questionStats[key][blankType].shift(); 
+            }
         }
         localStorage.setItem('calc_question_stats', JSON.stringify(questionStats));
     }

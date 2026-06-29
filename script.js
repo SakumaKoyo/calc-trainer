@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         keyLayout.forEach(key => {
             const btn = document.createElement('button');
-            btn.textContent = key === '負 (-)' ? '－' : key === 'C' ? 'C' : key;
+            btn.textContent = key === '負 (-)' ? '負 (-)' : key === 'C' ? 'C' : key;
             btn.classList.add('key-btn');
             
             if (key === '負 (-)' || key === 'C') btn.classList.add('action');

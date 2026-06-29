@@ -159,11 +159,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             } else if (op === '*') {
-                let kMin = isPositiveOnly ? 0 : -10;
+                let kMin = isPositiveOnly ? 0 : -10; // 乗算の範囲を制限
                 let kMax = isPositiveOnly ? 10 : 10;
                 for (let n1 = kMin; n1 <= kMax; n1++) {
                     for (let n2 = kMin; n2 <= kMax; n2++) {
-                        if (isMushikuiMode && (n1 === 0 || n2 === 0)) continue;
+                        // if (isMushikuiMode && (n1 === 0 || n2 === 0)) continue;
                         pool.push({ num1: n1, num2: n2, op: op });
                     }
                 }
@@ -171,12 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 let dMinDiv = isPositiveOnly ? 1 : -10;
                 let dMaxDiv = isPositiveOnly ? 10 : 10;
                 let dMinAns = isPositiveOnly ? 0 : -9;
-                let dMaxAns = isPositiveOnly ? 10 : 9;
+                let dMaxAns = isPositiveOnly ? 10 : 10;
 
                 for (let div = dMinDiv; div <= dMaxDiv; div++) {
                     if (div === 0) continue;
                     for (let ans = dMinAns; ans <= dMaxAns; ans++) {
-                        if (isMushikuiMode && ans === 0) continue;
+                        // if (isMushikuiMode && ans === 0) continue;
                         pool.push({ num1: ans * div, num2: div, op: op });
                     }
                 }
@@ -191,6 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const key = `${num1}_${op}_${num2}`;
         
         if (!questionStats[key] || !questionStats[key][blankType] || questionStats[key][blankType].length === 0) {
+            if (num1 === 0 || num2 === 0) return 1; // 0を含む問題はやや優先度低め
+
             return 3; // 未解答（ベースライン: 3）
         }
         
@@ -201,12 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const revengedWrongCount = history.filter(val => val === 0).length;  // 解き直して正解したミス
 
         // 重み付けアルゴリズム
-        if (absoluteWrongCount > 0) {
-            // 過去3回の中に1回でも「解き直せなかった完全な不正解(-1)」がある場合 ➔ 最優先ロックオン
-            return 15 + (absoluteWrongCount * 5); 
-        } else if (revengedWrongCount > 0) {
-            // ミスはしたけどその場で直せた(0)履歴がある場合 ➔ ちょっと苦手警戒モード
-            return 4 + revengedWrongCount; 
+        // if (absoluteWrongCount > 0) {
+        //     // 過去3回の中に1回でも「解き直せなかった完全な不正解(-1)」がある場合 ➔ 最優先ロックオン
+        //     return 15 + (absoluteWrongCount * 5); 
+        // } else if (revengedWrongCount > 0) {
+        //     // ミスはしたけどその場で直せた(0)履歴がある場合 ➔ ちょっと苦手警戒モード
+        //     return 4 + revengedWrongCount; 
+        if (absoluteWrongCount + revengedWrongCount > 0) {
+            return 4 + 15 * absoluteWrongCount + 4 * revengedWrongCount;
         } else {
             // すべて一発正解(1)の場合 ➔ 克服済みセーフモード
             return 1; 
@@ -223,6 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isMushikui) {
                 const bTypes = ['l', 'r', 'a'];
                 bTypes.forEach(b => {
+                    if (item.op === '/' && b === 'r' && item.num1 / item.num2 === 0) return; // 除算で右側を空欄にする場合、答えが0になる組み合わせは除外
+                    if (item.op === '*' && b === 'r' && item.num1 === 0) return; // 乗算で右側を空欄にする場合、左が0の組み合わせは除外
+                    if (item.op === '*' && b === 'l' && item.num2 === 0) return; // 乗算で左側を空欄にする場合、右が0の組み合わせは除外
+
                     extendedPool.push({
                         num1: item.num1, num2: item.num2, op: item.op, blankType: b,
                         weight: getProblemWeight(item.num1, item.op, item.num2, b)
@@ -361,7 +369,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateTimerText() {
         if (currentAppMode === "review") return;
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        timerDisplay.textContent = `${elapsed}秒`;
+        const min = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const sec = String(elapsed % 60).padStart(2, '0');
+        timerDisplay.textContent = `${min}:${sec}`;
     }
 
     function showNextProblem() {

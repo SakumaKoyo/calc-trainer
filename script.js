@@ -212,8 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (absoluteWrongCount + revengedWrongCount > 0) {
             return 4 + 15 * absoluteWrongCount + 4 * revengedWrongCount;
         } else {
-            // すべて一発正解(1)の場合 ➔ 克服済みセーフモード
-            return 1; 
+            // ─── ✨【大修正】すべて一発正解(1)の場合の傾斜制御 ───
+            // 履歴の件数（正解の回数）に応じて、ベースライン3から段階的にウエイトを減らす
+            // history.length が 1件 ➔ 3 - 0 = ウエイト 3
+            // history.length が 2件 ➔ 3 - 1 = ウエイト 2
+            // history.length が 3件 ➔ 3 - 2 = ウエイト 1 (完全克服)
+            return 3 - (history.length - 1);
         }
     }
 
@@ -224,22 +228,31 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let extendedPool = [];
         basePool.forEach(item => {
+            const isZeroProblem = (item.num1 === 0 || item.num2 === 0);
             if (isMushikui) {
                 const bTypes = ['l', 'r', 'a'];
                 bTypes.forEach(b => {
                     if (item.op === '/' && b === 'r' && item.num1 / item.num2 === 0) return; // 除算で右側を空欄にする場合、答えが0になる組み合わせは除外
                     if (item.op === '*' && b === 'r' && item.num1 === 0) return; // 乗算で右側を空欄にする場合、左が0の組み合わせは除外
                     if (item.op === '*' && b === 'l' && item.num2 === 0) return; // 乗算で左側を空欄にする場合、右が0の組み合わせは除外
+                    
+                    let w = getProblemWeight(item.num1, item.op, item.num2, b);
+
+                    if (isZeroProblem && w === 1) w = 0.5; //完璧でかつ0を含む問題の出現率を下げる
 
                     extendedPool.push({
                         num1: item.num1, num2: item.num2, op: item.op, blankType: b,
-                        weight: getProblemWeight(item.num1, item.op, item.num2, b)
+                        weight: w
                     });
                 });
             } else {
+                let w = getProblemWeight(item.num1, item.op, item.num2, b);
+
+                if (isZeroProblem && w === 1) w = 0.5; //完璧でかつ0を含む問題の出現率を下げる
+
                 extendedPool.push({
                     num1: item.num1, num2: item.num2, op: item.op, blankType: 'a',
-                    weight: getProblemWeight(item.num1, item.op, item.num2, 'a')
+                    weight: w
                 });
             }
         });

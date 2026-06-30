@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
             } else {
-                let w = getProblemWeight(item.num1, item.op, item.num2, b);
+                let w = getProblemWeight(item.num1, item.op, item.num2, 'a');
 
                 if (isZeroProblem && w === 1) w = 0.5; //完璧でかつ0を含む問題の出現率を下げる
 
@@ -513,10 +513,11 @@ document.addEventListener('DOMContentLoaded', () => {
             audioIncorrect.currentTime = 0;
             audioIncorrect.play();
             triggerFeedback('×');
-            wrongCount++;
+            // wrongCount++;
 
             // ─── 不正解時のスコアリング ───
             if (!isCurrentProblemWrongOnce) {
+                wrongCount++;
                 // 初めて間違えた瞬間（初手ミス）だけ、履歴データベースに「-1（未解決ミス）」を追加
                 updateQuestionStatsDatabase(statsKey, bKey, -1, false);
                 
@@ -566,12 +567,14 @@ document.addEventListener('DOMContentLoaded', () => {
             pool.push(prob);
             localStorage.setItem('calc_incorrect_pool', JSON.stringify(pool));
         }
+        updateReviewBadgeCount();
     }
 
     function removeProblemFromPersistentPool(prob) {
         let pool = JSON.parse(localStorage.getItem('calc_incorrect_pool')) || [];
         pool = pool.filter(p => !(p.num1 === prob.num1 && p.num2 === prob.num2 && p.op === prob.op && p.blankType === prob.blankType));
         localStorage.setItem('calc_incorrect_pool', JSON.stringify(pool));
+        updateReviewBadgeCount();
     }
 
     function triggerFeedback(symbol) {

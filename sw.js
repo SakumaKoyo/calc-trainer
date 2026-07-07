@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'calc-drill-v7.6'; // バージョンを少し上げました
+const CACHE_NAME = 'calc-drill-v7.7'; // バージョンを少し上げました
 
 // tree 構造と 100% 完全一致させたキャッシュリスト
 const ASSETS_TO_CACHE = [

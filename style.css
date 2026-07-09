@@ -165,7 +165,7 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
     justify-content: center; 
     align-items: center; 
     gap: 8px; 
-    font-size: 28px; /* 32pxから少し縮小してセーフティを確保 */
+    font-size: 32px; /* 32pxから少し縮小してセーフティを確保 */
     font-weight: bold;
     margin-top: 15px;
     flex-wrap: nowrap; /* 絶対に途中で改行させない */
@@ -217,9 +217,12 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
 
 .fixed-tenkey {
     position: fixed;
+    align-items: center; 
     bottom: calc(max(10px, env(safe-area-inset-bottom))); 
-    left: 4%; 
-    width: 92%; 
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 94%; 
+    max-width: 480px;
     background: #e4e7eb;
     padding: 12px;
     box-shadow: 0 6px 24 rgba(0,0,0,0.12); 

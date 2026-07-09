@@ -258,6 +258,10 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
     padding: 15px 0 5px 0;
 }
 /* ゲーム画面（#game-view）が表示されている時は、アプリ全体のフッターを非表示にする */
-.app-container:has(#game-view:not(.hidden)) .app-footer {
-    display: none !important;
+.app-footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #a0aec0; /* 少し薄めのグレーにして主役（ボタン）を邪魔しないように */
+    margin-top: 20px;
+    padding: 0;
 }

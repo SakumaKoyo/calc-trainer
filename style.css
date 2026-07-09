@@ -159,30 +159,41 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
 
 .game-header { display: flex; justify-content: space-between; font-size: 14px; color: #7f8c8d; font-weight: bold; position: absolute; top: 15px; left: 20px; right: 20px;}
 
+/* --- 数式エリア（崩れ防止・文字拡大対策を統合） --- */
 .formula-area { 
     display: flex; 
     justify-content: center; 
     align-items: center; 
     gap: 8px; 
-    font-size: 32px; 
+    font-size: 28px; /* 32pxから少し縮小してセーフティを確保 */
     font-weight: bold;
     margin-top: 15px;
+    flex-wrap: nowrap; /* 絶対に途中で改行させない */
+    white-space: nowrap; /* テキストの折り返しを禁止 */
 }
 
-#block-left   { order: 1; display: inline-block; }
-#block-middle { order: 3; display: inline-block; }
-#block-right  { order: 5; display: inline-block; }
+/* 各数値ブロックが潰れるのを防ぐ */
+#block-left, #block-middle, #block-right {
+    display: inline-block;
+    flex-shrink: 0;
+}
+#block-left   { order: 1; }
+#block-middle { order: 3; }
+#block-right  { order: 5; }
 
+/* 解答欄（可変幅にしてはみ出しを防ぐ） */
 .answer-box { 
     order: 6; 
     display: flex; 
     justify-content: center; 
     align-items: center; 
-    width: 110px; 
+    min-width: 90px; /* 固定幅110pxから変更、最小幅を保証 */
+    width: auto;
+    padding: 0 8px; /* 左右にバッファ用の余白を確保 */
     height: 55px; 
     border-bottom: 4px solid var(--primary); 
     border-radius: 4px 4px 0 0;
-    font-size: 28px; 
+    font-size: 26px; /* 28pxから微調整 */
     color: var(--primary); 
     background: #f8fafc; 
     touch-action: none; 
@@ -211,7 +222,7 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
     width: 92%; 
     background: #e4e7eb;
     padding: 12px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.12); 
+    box-shadow: 0 6px 24 rgba(0,0,0,0.12); 
     border-radius: 20px; 
     z-index: 100;
     display: flex;
@@ -253,15 +264,21 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
 
 .app-footer {
     text-align: center;
-    font-size: 0.8rem;
-    color: #888888;
-    padding: 15px 0 5px 0;
-}
-/* ゲーム画面（#game-view）が表示されている時は、アプリ全体のフッターを非表示にする */
-.app-footer {
-    text-align: center;
     font-size: 0.75rem;
-    color: #a0aec0; /* 少し薄めのグレーにして主役（ボタン）を邪魔しないように */
+    color: #a0aec0; 
     margin-top: 20px;
     padding: 0;
+}
+
+/* --- レスポンシブ用：デバイスや文字サイズが極端に小さい/大きい場合の間隔調整 --- */
+@media screen and (max-width: 360px) {
+    .formula-area {
+        font-size: 23px;
+        gap: 4px;
+    }
+    .answer-box {
+        font-size: 21px;
+        min-width: 75px;
+        height: 45px;
+    }
 }

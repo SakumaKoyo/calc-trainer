@@ -285,3 +285,47 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
         height: 45px;
     }
 }
+/* --- 画面の高さ（縦幅）が低いスマホ向けのレスポンシブ対策 --- */
+@media screen and (max-height: 740px) {
+    /* 1. 問題カードの上下の余白を削って、上に持ち上げる */
+    .formula-card {
+        padding: 20px 20px;
+        min-height: 120px;
+    }
+    /* .formula-area { */
+    /*     margin-top: 5px; */
+    /* } */
+
+    /* 2. テンキー全体の高さを抑える（余白とボタンをスリムに） */
+    .fixed-tenkey {
+        padding: 8px; /* 全体のグレーの余白を狭く */
+    }
+    .tenkey-grid {
+        gap: 6px; /* ボタン同士の間隔を狭く */
+    }
+    .key-btn {
+        padding: 15px 0; /* ボタンの縦幅を大幅にスリム化 */
+        font-size: 18px; /* 文字を少し小さくして押しやすさをキープ */
+    }
+    .key-btn.enter {
+        padding: 10px 0;
+    }
+}
+
+/* --- さらに画面が小さい、または文字サイズ設定が極端に大きい場合（念のためのセーフティ） --- */
+@media screen and (max-height: 640px) {
+    .formula-card {
+        padding: 15px 20px;
+    }
+    .formula-area {
+        font-size: 24px;
+    }
+    .answer-box {
+        height: 45px;
+        font-size: 22px;
+    }
+    .key-btn {
+        padding: 8px 0;
+        font-size: 16px;
+    }
+}

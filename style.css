@@ -120,11 +120,60 @@ h3 { margin-top: 15px; font-size: 14px; color: #555; }
     box-shadow: 0 3px 6px rgba(46, 204, 113, 0.25);
 }
 
-.input-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
-.input-group.row-group { flex-direction: row; align-items: center; justify-content: space-between; }
+.input-group,
+.chip-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+.input-group.row-group {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
 .filter-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #eef2f7; padding: 10px; border-radius: 12px; margin-bottom: 15px; }
-label { font-weight: bold; font-size: 13px; color: #666; }
-select { padding: 10px; font-size: 15px; border: 1px solid var(--border-color); border-radius: 10px; background: #fafafa; width: 100%; color: #333; }
+.input-group label,
+.chip-group label {
+    font-weight: bold;
+    font-size: 13px;
+    color: #666;
+}
+.input-group select {
+    padding: 10px; 
+    font-size: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: #fafafa;
+    width: 100%;
+    color: #333;
+}
+.input-group .sub-toggle-container {
+    display: flex;
+    background: #eef2f7;
+    border-radius: 10px;
+    padding: 3px;
+    border: 1px solid var(--border-color);
+}
+
+.input-group .sub-toggle-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #64748b;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.input-group .sub-toggle-btn.active {
+    background: var(--card-bg);
+    color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
 
 .hidden-message {
     text-align: center;
@@ -225,7 +274,7 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
     max-width: 480px;
     background: #e4e7eb;
     padding: 12px;
-    box-shadow: 0 6px 24 rgba(0,0,0,0.12); 
+    box-shadow: 0 6px 24px rgba(0,0,0,0.12); 
     border-radius: 20px; 
     z-index: 100;
     display: flex;
@@ -328,4 +377,133 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
         padding: 8px 0;
         font-size: 16px;
     }
+}
+/* グループ全体のレイアウト（横並びで折り返しあり） */
+.chip-container {
+  display: grid;
+  /* flex-wrap: wrap; */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* ボタン（楕円）のベース設定 */
+.custom-chip {
+  cursor: pointer;
+  user-select: none;
+  font-family: sans-serif;
+}
+
+/* デフォルトのチェックボックスを完全に非表示にする */
+.custom-chip input[type="checkbox"] {
+  position: absolute;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+}
+
+/* 楕円ボタンの見た目 */
+.custom-chip .chip-text {
+  display: inline-block;
+  padding: 8px 18px;
+  width: 100%;
+  margin: 3px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  background-color: #f2f2f2;
+  border: 1px solid transparent;
+  border-radius: 100px; /* 完全に丸い楕円にする */
+  transition: all 0.2s ease;
+}
+
+/* ホバー時の変化 */
+.custom-chip:hover .chip-text {
+  background-color: #e5e5e5;
+  color: #333;
+}
+
+/* 選択された（チェックが入った）ときのスタイル */
+.custom-chip input[type="checkbox"]:checked + .chip-text {
+  background-color: #eef6ff; /* 薄い青 */
+  color: var(--primary);            /* 鮮やかな青 */
+  border-color: var(--primary);     /* 青い枠線 */
+}
+
+/* フォーカス時のアクセシビリティ対応（キーボード操作用） */
+.custom-chip input[type="checkbox"]:focus-visible + .chip-text {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+/* 背景の黒透過レイヤー */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    touch-action: none;
+}
+
+/* モーダル枠 */
+.modal-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    animation: modal-pop 0.15s ease-out;
+}
+
+@keyframes modal-pop {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-title {
+    font-size: 17px;
+    color: var(--text-color);
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.modal-message {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 12px 0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-btn.ok {
+    background: var(--danger); /* 削除用なら赤、共通なら primary */
+    color: white;
+}
+
+.modal-btn:active {
+    transform: scale(0.98);
 }

@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedbackText = document.getElementById('feedback-text');
     
     const opSelect = document.getElementById('op-select');
-    const rangeSelect = document.getElementById('range-select');
     const countSelect = document.getElementById('count-select');
+    const reviewCountSelect = document.getElementById('review-count-select');
 
     const filterOp = document.getElementById('filter-op');
     const filterRange = document.getElementById('filter-range');
@@ -33,13 +33,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockMiddle = document.getElementById('block-middle');
     const blockRight = document.getElementById('block-right');
 
+    const modeBasicBtn = document.getElementById('mode-basic-btn');
     const modeNormalBtn = document.getElementById('mode-normal-btn');
     const modeReviewBtn = document.getElementById('mode-review-btn');
-    const setupOptionsBox = document.getElementById('setup-options-box');
+    const basicSetup = document.getElementById('basic-setup');
+    const normalSetup = document.getElementById('normal-setup');
+    const reviewSetup = document.getElementById('review-setup');
     const reviewCountBadge = document.getElementById('review-count-badge');
     const reviewEmptyAlert = document.getElementById('review-empty-alert');
     const instantReviewBtn = document.getElementById('instant-review-btn');
+
+    const rangePositiveBtn = document.getElementById('range-positive-btn');
+    const rangeAllBtn = document.getElementById('range-all-btn');
+    const basicInOrderBtn = document.getElementById('basic-inorder-btn');
+    const basicReverseBtn = document.getElementById('basic-reverse-btn');
+    const basicRandomBtn = document.getElementById('basic-random-btn');
     
+    const basicStatsBox = document.getElementById('basic-stats-box');
     const normalStatsBox = document.getElementById('normal-stats-box');
     const reviewStatsBox = document.getElementById('review-stats-box');
     const resultTitle = document.getElementById('result-title');
@@ -70,6 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentRoundWrongPool = []; 
     let isCurrentProblemWrongOnce = false; 
 
+    let rangeMode = "positive";
+    let questionOrderMode = "inOrder";
+
+    let isProcessingAnswer = false;
+
     const FLASH_DURATION = 350;
 
     // 初期化処理
@@ -94,20 +109,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==================== 通常 / 復習 モード切り替え ====================
+    modeBasicBtn.addEventListener('click', () => {
+        currentAppMode = "basic";
+        modeBasicBtn.classList.add('active');
+        modeNormalBtn.classList.remove('active');
+        modeReviewBtn.classList.remove('active');
+        basicSetup.classList.remove('hidden'); 
+        normalSetup.classList.add('hidden'); 
+        reviewSetup.classList.add('hidden'); 
+        // reviewEmptyAlert.classList.add('hidden');
+        startBtn.classList.remove('disabled-box');
+    });
     modeNormalBtn.addEventListener('click', () => {
         currentAppMode = "normal";
+        modeBasicBtn.classList.remove('active');
         modeNormalBtn.classList.add('active');
         modeReviewBtn.classList.remove('active');
-        setupOptionsBox.classList.remove('hidden'); 
-        reviewEmptyAlert.classList.add('hidden');
+        basicSetup.classList.add('hidden'); 
+        normalSetup.classList.remove('hidden'); 
+        reviewSetup.classList.add('hidden'); 
+        // reviewEmptyAlert.classList.add('hidden');
         startBtn.classList.remove('disabled-box');
     });
 
     modeReviewBtn.addEventListener('click', () => {
         currentAppMode = "review";
-        modeReviewBtn.classList.add('active');
+        modeBasicBtn.classList.remove('active');
         modeNormalBtn.classList.remove('active');
-        setupOptionsBox.classList.add('hidden'); 
+        modeReviewBtn.classList.add('active');
+        basicSetup.classList.add('hidden'); 
+        normalSetup.classList.add('hidden'); 
+        reviewSetup.classList.remove('hidden'); 
         
         const pool = JSON.parse(localStorage.getItem('calc_incorrect_pool')) || [];
         if (pool.length === 0) {
@@ -118,6 +150,36 @@ document.addEventListener('DOMContentLoaded', () => {
             reviewEmptyAlert.classList.add('hidden'); 
             startBtn.classList.remove('disabled-box');
         }
+    });
+    // ==================== 数値の範囲選択ボタン ====================
+    rangePositiveBtn.addEventListener('click', () => {
+        rangePositiveBtn.classList.add('active');
+        rangeAllBtn.classList.remove('active');
+        rangeMode = 'positive';
+    });
+    rangeAllBtn.addEventListener('click', () => {
+        rangeAllBtn.classList.add('active');
+        rangePositiveBtn.classList.remove('active');
+        rangeMode = 'all';
+    });
+    // ==================== 出題形式ボタン ====================
+    basicInOrderBtn.addEventListener('click', () => {
+        basicInOrderBtn.classList.add('active');
+        basicReverseBtn.classList.remove('active');
+        basicRandomBtn.classList.remove('active');
+        questionOrderMode = 'inOrder';
+    });
+    basicReverseBtn.addEventListener('click', () => {
+        basicReverseBtn.classList.add('active');
+        basicInOrderBtn.classList.remove('active');
+        basicRandomBtn.classList.remove('active');
+        questionOrderMode = 'reverse';
+    });
+    basicRandomBtn.addEventListener('click', () => {
+        basicRandomBtn.classList.add('active');
+        basicInOrderBtn.classList.remove('active');
+        basicReverseBtn.classList.remove('active');
+        questionOrderMode = 'random';
     });
 
     instantReviewBtn.addEventListener('click', () => {
@@ -221,6 +283,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function generateBasicModeQuestions(selectedValues, orderMode) {
+        let pool = [];
+        selectedValues.forEach(dan => {
+            for (let n2 = 1; n2 <= 9; n2++) {
+                const n1 = dan;
+                pool.push({
+                    num1: n1,
+                    num2: n2,
+                    op: '*',
+                    opSymbol: '×',
+                    answer: n1 * n2,
+                    blankType: 'a',
+                    originalOpMode: '*'
+                });
+            }
+        });
+
+        if (orderMode === 'inOrder') {
+            return pool; // そのまま順番通り
+        } else if (orderMode === 'reverse') {
+            return pool.reverse(); // 逆順
+        } else if (orderMode === 'random') {
+            // 普通にランダムにする．
+            // Fisher-Yatesアルゴリズムとか使わない
+            return pool.sort(() => Math.random() - 0.5);
+        }
+    }
+
     // アダプティブ問題自動抽選エンジン
     function generateAdaptiveQuestions(opMode, rangeMode, targetCount) {
         const basePool = generateAllProblemPool(opMode, rangeMode);
@@ -306,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function preBuildProblemsBeforeCountdown() {
         lastPlayedOp = opSelect.value;
-        lastPlayedRange = rangeSelect.value;
+        lastPlayedRange = rangeMode;
         totalQuestions = parseInt(countSelect.value);
 
         filterOp.value = lastPlayedOp;
@@ -321,18 +411,35 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentAppMode === "normal") {
             problemsList = generateAdaptiveQuestions(lastPlayedOp, lastPlayedRange, totalQuestions);
             totalQuestions = problemsList.length;
+            console.log(problemsList);
+            console.log(totalQuestions);
+        } else if (currentAppMode === "basic") {
+            const checkedBoxes = document.querySelectorAll('input[name="tags"]:checked');
+            const selectedValues = Array.from(checkedBoxes).map(inp => parseInt(inp.value, 10));
+            const totalSelected = selectedValues.length;
+            
+            if (totalSelected === 0) {
+                showAlert("段が選択されていません", "確認");
+                return false;
+            }
+            // alert(`選択された段: ${selectedValues.join(', ')}`);
+            problemsList = generateBasicModeQuestions(selectedValues, questionOrderMode);
+            totalQuestions = problemsList.length;
+
         } else {
             let pool = JSON.parse(localStorage.getItem('calc_incorrect_pool')) || [];
             pool.sort(() => Math.random() - 0.5);
-            const selectedCount = parseInt(countSelect.value);
+            const selectedCount = parseInt(reviewCountSelect.value);
             problemsList = pool.slice(0, selectedCount); 
-            totalQuestions = problemsList.length;
+            totalQuestions = Math.min(problemsList.length, selectedCount);
         }
+        return true;
     }
 
     startBtn.addEventListener('click', () => {
+        console.log(startBtn.classList.contains('disabled-box'));
         if (startBtn.classList.contains('disabled-box')) return;
-        preBuildProblemsBeforeCountdown();
+        if (!preBuildProblemsBeforeCountdown()) return;
         startCountdown();
     });
 
@@ -363,6 +470,8 @@ document.addEventListener('DOMContentLoaded', () => {
             startTime = Date.now();
             updateTimerText();
             timerInterval = setInterval(updateTimerText, 100); 
+        } else if (currentAppMode === "basic") {
+            timerDisplay.textContent = "基礎モード";
         } else {
             timerDisplay.textContent = "復習モード"; 
         }
@@ -480,7 +589,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 【-1, 0, 1 変位システム完全実装＋重複保存ガード】
     function evaluateUserAnswer() {
+        if (isProcessingAnswer) return;
+
         if (userTypedInput === "" || userTypedInput === "-") return;
+        isProcessingAnswer = true;
         const userAnsInt = parseInt(userTypedInput);
         const currentProb = problemsList[currentIdx];
 
@@ -508,6 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 if (currentIdx < totalQuestions) showNextProblem();
                 else endGame();
+                isProcessingAnswer = false;
             }, FLASH_DURATION - 100);
         } else {
             audioIncorrect.currentTime = 0;
@@ -518,13 +631,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // ─── 不正解時のスコアリング ───
             if (!isCurrentProblemWrongOnce) {
                 wrongCount++;
+                console.log(`間違えた問題: ${currentProb.num1} ${currentProb.op} ${currentProb.num2}, 空欄タイプ: ${bKey}`);
                 // 初めて間違えた瞬間（初手ミス）だけ、履歴データベースに「-1（未解決ミス）」を追加
                 updateQuestionStatsDatabase(statsKey, bKey, -1, false);
                 
                 // 通常モード時のみ、間違いプール（復習用）へ1件だけ永続ストック（2回目以降のミスでの重複プッシュを完全に排除）
-                if (currentAppMode === "normal") {
+                if (currentAppMode === "normal" || currentAppMode === "basic") {
+                    console.log("初手ミスのため、間違えた問題を復習プールに追加します。");
                     if (!currentRoundWrongPool.some(p => p.num1 === currentProb.num1 && p.num2 === currentProb.num2 && p.op === currentProb.op && p.blankType === currentProb.blankType)) {
                         currentRoundWrongPool.push(currentProb);
+                        console.log("currentRoundWrongPoolに追加:", currentProb);
                     }
                     saveProblemToPersistentPool(currentProb); 
                 }
@@ -534,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isCurrentProblemWrongOnce = true;
             userTypedInput = "";
             answerInputBox.textContent = "";
+            isProcessingAnswer = false;
         }
     }
 
@@ -601,6 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('res-avg-speed').textContent = `${avgSpeed}秒`;
 
             resultTitle.textContent = "結果発表 🎉";
+            basicStatsBox.classList.add('hidden');
             normalStatsBox.classList.remove('hidden');
             reviewStatsBox.classList.add('hidden');
 
@@ -626,8 +744,26 @@ document.addEventListener('DOMContentLoaded', () => {
             currentRecords.push(newRecord);
             localStorage.setItem('calc_training_records', JSON.stringify(currentRecords));
 
+        } else if (currentAppMode === "basic") {
+            resultTitle.textContent = "基礎モード終了！ 🎯";
+            basicStatsBox.classList.remove('hidden');
+            normalStatsBox.classList.add('hidden');
+            reviewStatsBox.classList.add('hidden');
+
+            // 基礎モード側
+            document.getElementById('res-basic-count').textContent = `${totalQuestions}問`;
+            document.getElementById('res-basic-wrong').textContent = `${wrongCount}回`;
+            document.getElementById('res-correct-rate').textContent = `${(((totalQuestions - wrongCount) / totalQuestions) * 100).toFixed(1)}%`;
+
+            if (currentRoundWrongPool.length > 0) {
+                instantReviewBtn.textContent = `間違えた問題 (${currentRoundWrongPool.length}問) を今すぐ復習する`;
+                instantReviewBtn.classList.remove('hidden');
+            } else {
+                instantReviewBtn.classList.add('hidden');
+            }
         } else {
             resultTitle.textContent = "復習お疲れ様でした！ ✨";
+            basicStatsBox.classList.add('hidden');
             normalStatsBox.classList.add('hidden');
             reviewStatsBox.classList.remove('hidden');
             
@@ -643,7 +779,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==================== 戻る & クリア制御 ====================
     backSetupBtn.addEventListener('click', () => {
         updateReviewBadgeCount();
-        modeNormalBtn.click();
+        if (currentAppMode === "basic") {
+            modeBasicBtn.click();
+        } else if (currentAppMode === "normal") {
+            modeNormalBtn.click();
+        }
         switchView(setupView);
     });
     
@@ -756,4 +896,42 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+        function showAlert(message, title = "お知らせ") {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-modal');
+                const modalTitle = document.getElementById('modal-title');
+                const modalMsg = document.getElementById('modal-message');
+                const okBtn = document.getElementById('modal-ok-btn');
+
+                modalTitle.textContent = title;
+                modalMsg.textContent = message;
+
+                modal.classList.remove('hidden');
+
+                const onOk = () => {
+                    okBtn.removeEventListener('click', onOk);
+                    modal.classList.add('hidden');
+                    resolve(); // 閉じたことを通知して終了
+                };
+
+                okBtn.addEventListener('click', onOk);
+            });
+        }
+        // function addChips() {
+            const chipGroup = document.getElementById('chip-container');
+            for(let i = 0; i < 9; i++){
+                const lab = document.createElement('label');
+                lab.className = "custom-chip"
+                const inp = document.createElement('input');
+            inp.type = "checkbox";
+            inp.name = "tags";
+            inp.value = i + 1;
+            const sp = document.createElement('span');
+            sp.className = "chip-text";
+            sp.textContent = `${i + 1}の段`;
+            lab.appendChild(inp);
+            lab.appendChild(sp);
+            chipGroup.appendChild(lab);
+        }
+    // }
 });

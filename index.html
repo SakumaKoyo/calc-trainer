@@ -51,11 +51,32 @@
                     <h2>トレーニング設定</h2>
                     
                     <div class="mode-toggle-container">
+                        <button id="mode-basic-btn" class="mode-toggle-btn">基礎モード</button>
                         <button id="mode-normal-btn" class="mode-toggle-btn active">通常モード</button>
                         <button id="mode-review-btn" class="mode-toggle-btn">復習モード (<span id="review-count-badge">0</span>)</button>
                     </div>
 
-                    <div id="setup-options-box">
+                    <!-- 基本モードの設定画面 -->
+                    <div id="basic-setup" class="mode-setup hidden">
+                        <div id="basic-empty-alert" class="hidden-message">基礎モードは過去の記録に保存されません．正確に覚えるようにしてください</div>
+                        <div class="chip-group">
+                            <label>段の選択</label>
+                            <div id="chip-container" class="chip-container">
+                                <!-- チップボタンはJavaScriptで生成されます -->
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>出題方法</label>
+                            <div class="sub-toggle-container">
+                                <button type="button" id="basic-inorder-btn" class="sub-toggle-btn active" data-val="sequential">順番</button>
+                                <button type="button" id="basic-reverse-btn" class="sub-toggle-btn" data-val="sequential">逆順</button>
+                                <button type="button" id="basic-random-btn" class="sub-toggle-btn" data-val="random">ランダム</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 標準モードの設定画面 -->
+                    <div id="normal-setup" class="mode-setup">
                         <div class="input-group">
                             <label for="op-select">演算の種類</label>
                             <select id="op-select">
@@ -71,31 +92,49 @@
                                 <option value="mushikui-all">虫食い（四則演算すべて）</option>
                             </select>
                         </div>
+                        <!-- <div class="input-group"> -->
+                        <!--     <label for="range-select">数値の範囲</label> -->
+                        <!--     <select id="range-select"> -->
+                        <!--         <option value="positive">正の数のみ</option> -->
+                        <!--         <option value="all">負の数を含む</option> -->
+                        <!--     </select> -->
+                        <!-- </div> -->
                         <div class="input-group">
-                            <label for="range-select">数値の範囲</label>
-                            <select id="range-select">
-                                <option value="positive">正の数のみ</option>
-                                <option value="all">負の数を含む</option>
+                            <label>数値の範囲</label>
+                            <div class="sub-toggle-container">
+                                <button type="button" id="range-positive-btn" class="sub-toggle-btn active" data-val="positive">正の数のみ</button>
+                                <button type="button" id="range-all-btn" class="sub-toggle-btn" data-val="all">負の数を含む</button>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="count-select">出題数</label>
+                            <select id="count-select">
+                                <option value="10">10問</option>
+                                <option value="20" selected>20問</option>
+                                <option value="30">30問</option>
+                                <option value="50">50問</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="input-group">
-                        <label for="count-select">出題数</label>
-                        <select id="count-select">
-                            <option value="10">10問</option>
-                            <option value="20" selected>20問</option>
-                            <option value="30">30問</option>
-                            <option value="50">50問</option>
-                        </select>
+                    <!-- 復習モードの設定画面 -->
+                    <div id="review-setup" class="mode-setup hidden">
+                        <div id="review-empty-alert" class="hidden-message hidden"></div>
+                        <div class="input-group">
+                            <label for="review-count-select">出題数</label>
+                            <select id="review-count-select">
+                                <option value="10">10問</option>
+                                <option value="20" selected>20問</option>
+                                <option value="30">30問</option>
+                                <option value="50">50問</option>
+                            </select>
+                        </div>
                     </div>
-                    
-                    <div id="review-empty-alert" class="hidden-message hidden"></div>
 
                     <button id="start-btn" class="primary-btn">スタート</button>
-                <footer class="app-footer">
-                    <p>計算トレーニングアプリ v7.11</p>
-                </footer>
+                    <footer class="app-footer">
+                        <p>計算トレーニングアプリ v8</p>
+                    </footer>
                 </div>
 
                 <div id="countdown-view" class="card main-card hidden">
@@ -128,6 +167,11 @@
                 <div id="result-view" class="card main-card hidden">
                     <h2 id="result-title">結果発表 🎉</h2>
                     <div class="result-stats">
+                        <div id="basic-stats-box" class="hidden">
+                            <p>問題数: <strong id="res-basic-count">0問</strong></p>
+                            <p>誤答数: <strong id="res-basic-wrong">0回</strong></p>
+                            <p>正答率: <strong id="res-correct-rate">0%</strong></p>
+                        </div>
                         <div id="normal-stats-box">
                             <p>総経過時間: <strong id="res-total-time">0分0秒</strong></p>
                             <p>誤答数: <strong id="res-wrong-count">0回</strong></p>
@@ -209,6 +253,17 @@
                 </div>
             </div>
         </section>
+    </div>
+    <!-- カスタム確認モーダル -->
+    <div id="custom-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 id="modal-title" class="modal-title">確認</h3>
+            <p id="modal-message" class="modal-message"></p>
+            <div class="modal-actions">
+                <!-- <button type="button" id="modal-cancel-btn" class="modal-btn cancel">キャンセル</button> -->
+                <button type="button" id="modal-ok-btn" class="modal-btn ok">OK</button>
+            </div>
+        </div>
     </div>
     <!-- index.html の </body> 直前など -->
     <script>

@@ -341,9 +341,6 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
         padding: 20px 20px;
         min-height: 120px;
     }
-    /* .formula-area { */
-    /*     margin-top: 5px; */
-    /* } */
 
     /* 2. テンキー全体の高さを抑える（余白とボタンをスリムに） */
     .fixed-tenkey {
@@ -409,7 +406,6 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
   display: inline-block;
   padding: 8px 18px;
   width: 100%;
-  margin: 3px;
   text-align: center;
   vertical-align: middle;
   font-size: 14px;
@@ -421,12 +417,6 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
   transition: all 0.2s ease;
 }
 
-/* ホバー時の変化 */
-.custom-chip:hover .chip-text {
-  background-color: #e5e5e5;
-  color: #333;
-}
-
 /* 選択された（チェックが入った）ときのスタイル */
 .custom-chip input[type="checkbox"]:checked + .chip-text {
   background-color: #eef6ff; /* 薄い青 */
@@ -434,11 +424,6 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
   border-color: var(--primary);     /* 青い枠線 */
 }
 
-/* フォーカス時のアクセシビリティ対応（キーボード操作用） */
-.custom-chip input[type="checkbox"]:focus-visible + .chip-text {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
 /* 背景の黒透過レイヤー */
 .modal-overlay {
     position: fixed;
@@ -485,7 +470,6 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
 
 .modal-actions {
     display: flex;
-    gap: 10px;
 }
 
 .modal-btn {
@@ -500,7 +484,7 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
 }
 
 .modal-btn.ok {
-    background: var(--danger); /* 削除用なら赤、共通なら primary */
+    background: var(--primary); /* 削除用なら赤、共通なら primary */
     color: white;
 }
 

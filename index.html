@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>計算トレーニングアプリ v7.11</title>
-    <link rel="stylesheet" href="./style.css">
+    
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <title>計算トレーニングアプリ v8.1</title>
+    <link rel="stylesheet" href="./style.css?v=8.1">
 
     <meta name="msapplication-square70x70logo" content="/site-tile-70x70.png">
     <meta name="msapplication-square150x150logo" content="/site-tile-150x150.png">
@@ -58,7 +61,8 @@
 
                     <!-- 基本モードの設定画面 -->
                     <div id="basic-setup" class="mode-setup hidden">
-                        <div id="basic-empty-alert" class="hidden-message">基礎モードは過去の記録に保存されません．正確に覚えるようにしてください</div>
+                        <!-- <div id="basic-empty-alert" class="hidden-message">過去の記録に保存されません．正確に覚えましょう</div> -->
+                        <div id="basic-empty-alert" class="hidden-message">⚠️ 記録には残りません。落ち着いて正確に！🔥</div>
                         <div class="chip-group">
                             <label>段の選択</label>
                             <div id="chip-container" class="chip-container">
@@ -68,9 +72,9 @@
                         <div class="input-group">
                             <label>出題方法</label>
                             <div class="sub-toggle-container">
-                                <button type="button" id="basic-inorder-btn" class="sub-toggle-btn active" data-val="sequential">順番</button>
-                                <button type="button" id="basic-reverse-btn" class="sub-toggle-btn" data-val="sequential">逆順</button>
-                                <button type="button" id="basic-random-btn" class="sub-toggle-btn" data-val="random">ランダム</button>
+                                <button type="button" id="basic-inorder-btn" class="sub-toggle-btn active">順番</button>
+                                <button type="button" id="basic-reverse-btn" class="sub-toggle-btn">逆順</button>
+                                <button type="button" id="basic-random-btn" class="sub-toggle-btn">ランダム</button>
                             </div>
                         </div>
                     </div>
@@ -92,18 +96,11 @@
                                 <option value="mushikui-all">虫食い（四則演算すべて）</option>
                             </select>
                         </div>
-                        <!-- <div class="input-group"> -->
-                        <!--     <label for="range-select">数値の範囲</label> -->
-                        <!--     <select id="range-select"> -->
-                        <!--         <option value="positive">正の数のみ</option> -->
-                        <!--         <option value="all">負の数を含む</option> -->
-                        <!--     </select> -->
-                        <!-- </div> -->
                         <div class="input-group">
                             <label>数値の範囲</label>
                             <div class="sub-toggle-container">
-                                <button type="button" id="range-positive-btn" class="sub-toggle-btn active" data-val="positive">正の数のみ</button>
-                                <button type="button" id="range-all-btn" class="sub-toggle-btn" data-val="all">負の数を含む</button>
+                                <button type="button" id="range-positive-btn" class="sub-toggle-btn active">正の数のみ</button>
+                                <button type="button" id="range-all-btn" class="sub-toggle-btn">負の数を含む</button>
                             </div>
                         </div>
                         <div class="input-group">
@@ -133,7 +130,7 @@
 
                     <button id="start-btn" class="primary-btn">スタート</button>
                     <footer class="app-footer">
-                        <p>計算トレーニングアプリ v8</p>
+                        <p>計算トレーニングアプリ v8.1</p>
                     </footer>
                 </div>
 
@@ -265,14 +262,6 @@
             </div>
         </div>
     </div>
-    <!-- index.html の </body> 直前など -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then(() => console.log('Service Worker 登録成功！'))
-                .catch(err => console.error('Service Worker 登録失敗:', err));
-        }
-    </script>
     <script src="script.js"></script>
 </body>
 </html>

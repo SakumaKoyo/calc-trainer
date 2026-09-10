@@ -73,8 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let problemsList = [];
     let chartInstance = null;
     
-    let lastPlayedOp = "+";
-    let lastPlayedRange = "positive";
+    let opMode = "+";
     
     let currentAppMode = "normal"; 
     let currentRoundWrongPool = []; 
@@ -395,12 +394,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function preBuildProblemsBeforeCountdown() {
-        lastPlayedOp = opSelect.value;
-        lastPlayedRange = rangeMode;
         totalQuestions = parseInt(countSelect.value);
 
-        filterOp.value = lastPlayedOp;
-        filterRange.value = lastPlayedRange;
+        filterOp.value = opMode;
+        filterRange.value = rangeMode;
 
         currentIdx = 0;
         wrongCount = 0;
@@ -409,10 +406,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentRoundWrongPool = []; 
 
         if (currentAppMode === "normal") {
-            problemsList = generateAdaptiveQuestions(lastPlayedOp, lastPlayedRange, totalQuestions);
+            problemsList = generateAdaptiveQuestions(opMode, rangeMode, totalQuestions);
             totalQuestions = problemsList.length;
-            console.log(problemsList);
-            console.log(totalQuestions);
         } else if (currentAppMode === "basic") {
             const checkedBoxes = document.querySelectorAll('input[name="tags"]:checked');
             const selectedValues = Array.from(checkedBoxes).map(inp => parseInt(inp.value, 10));
@@ -437,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     startBtn.addEventListener('click', () => {
-        console.log(startBtn.classList.contains('disabled-box'));
+        opMode = opSelect.value;
         if (startBtn.classList.contains('disabled-box')) return;
         if (!preBuildProblemsBeforeCountdown()) return;
         startCountdown();
@@ -586,318 +581,315 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         answerInputBox.textContent = userTypedInput;
     }
+        function evaluateUserAnswer() {
+            if (isProcessingAnswer) return;
 
-    // 【-1, 0, 1 変位システム完全実装＋重複保存ガード】
-    function evaluateUserAnswer() {
-        if (isProcessingAnswer) return;
+            if (userTypedInput === "" || userTypedInput === "-") return;
+            isProcessingAnswer = true;
+            const userAnsInt = parseInt(userTypedInput);
+            const currentProb = problemsList[currentIdx];
 
-        if (userTypedInput === "" || userTypedInput === "-") return;
-        isProcessingAnswer = true;
-        const userAnsInt = parseInt(userTypedInput);
-        const currentProb = problemsList[currentIdx];
+            let bKey = currentProb.blankType || 'a';
+            const statsKey = `${currentProb.num1}_${currentProb.op}_${currentProb.num2}`;
 
-        let bKey = currentProb.blankType || 'a';
-        const statsKey = `${currentProb.num1}_${currentProb.op}_${currentProb.num2}`;
+            if (userAnsInt === currentAnswer) {
+                audioCorrect.currentTime = 0; 
+                audioCorrect.play();
+                triggerFeedback('◯');
 
-        if (userAnsInt === currentAnswer) {
-            audioCorrect.currentTime = 0; 
-            audioCorrect.play();
-            triggerFeedback('◯');
-
-            // ─── 正解時のスコアリング ───
-            if (isCurrentProblemWrongOnce) {
-                // すでに間違えていた場合は、1回目に突っ込んだ「-1」を「0（その場でリベンジ成功）」に上書き！
-                updateQuestionStatsDatabase(statsKey, bKey, 0, true); 
-            } else {
-                // 初見一発正解なら、文句なしの「1（完全正解）」を追加
-                updateQuestionStatsDatabase(statsKey, bKey, 1, false);
-                if (currentAppMode === "review") {
-                    removeProblemFromPersistentPool(currentProb);
+                // ─── 正解時のスコアリング ───
+                if (isCurrentProblemWrongOnce) {
+                    // すでに間違えていた場合は、1回目に突っ込んだ「-1」を「0（その場でリベンジ成功）」に上書き！
+                    updateQuestionStatsDatabase(statsKey, bKey, 0, true); 
+                } else {
+                    // 初見一発正解なら、文句なしの「1（完全正解）」を追加
+                    updateQuestionStatsDatabase(statsKey, bKey, 1, false);
+                    if (currentAppMode === "review") {
+                        removeProblemFromPersistentPool(currentProb);
+                    }
                 }
-            }
 
-            currentIdx++;
-            setTimeout(() => {
-                if (currentIdx < totalQuestions) showNextProblem();
-                else endGame();
+                currentIdx++;
+                setTimeout(() => {
+                    if (currentIdx < totalQuestions) showNextProblem();
+                    else endGame();
+                    isProcessingAnswer = false;
+                }, FLASH_DURATION - 100);
+            } else {
+                audioIncorrect.currentTime = 0;
+                audioIncorrect.play();
+                triggerFeedback('×');
+                // wrongCount++;
+
+                // ─── 不正解時のスコアリング ───
+                if (!isCurrentProblemWrongOnce) {
+                    wrongCount++;
+                    // 初めて間違えた瞬間（初手ミス）だけ、履歴データベースに「-1（未解決ミス）」を追加
+                    updateQuestionStatsDatabase(statsKey, bKey, -1, false);
+
+                    // 通常モード時のみ、間違いプール（復習用）へ1件だけ永続ストック（2回目以降のミスでの重複プッシュを完全に排除）
+                    if (currentAppMode === "normal" || currentAppMode === "basic") {
+                        if (!currentRoundWrongPool.some(p => p.num1 === currentProb.num1 && p.num2 === currentProb.num2 && p.op === currentProb.op && p.blankType === currentProb.blankType)) {
+                            currentRoundWrongPool.push(currentProb);
+                        }
+                        saveProblemToPersistentPool(currentProb); 
+                    }
+                }
+                // 2回目、3回目の連続ミス時は上のif文をスルーするため、LocalStorageへの多重書き込みは一切発生しません。
+
+                isCurrentProblemWrongOnce = true;
+                userTypedInput = "";
+                answerInputBox.textContent = "";
                 isProcessingAnswer = false;
-            }, FLASH_DURATION - 100);
-        } else {
-            audioIncorrect.currentTime = 0;
-            audioIncorrect.play();
-            triggerFeedback('×');
-            // wrongCount++;
+            }
+        }
 
-            // ─── 不正解時のスコアリング ───
-            if (!isCurrentProblemWrongOnce) {
-                wrongCount++;
-                console.log(`間違えた問題: ${currentProb.num1} ${currentProb.op} ${currentProb.num2}, 空欄タイプ: ${bKey}`);
-                // 初めて間違えた瞬間（初手ミス）だけ、履歴データベースに「-1（未解決ミス）」を追加
-                updateQuestionStatsDatabase(statsKey, bKey, -1, false);
-                
-                // 通常モード時のみ、間違いプール（復習用）へ1件だけ永続ストック（2回目以降のミスでの重複プッシュを完全に排除）
-                if (currentAppMode === "normal" || currentAppMode === "basic") {
-                    console.log("初手ミスのため、間違えた問題を復習プールに追加します。");
-                    if (!currentRoundWrongPool.some(p => p.num1 === currentProb.num1 && p.num2 === currentProb.num2 && p.op === currentProb.op && p.blankType === currentProb.blankType)) {
-                        currentRoundWrongPool.push(currentProb);
-                        console.log("currentRoundWrongPoolに追加:", currentProb);
-                    }
-                    saveProblemToPersistentPool(currentProb); 
+        // 履歴データベース更新用関数（上書き対応版）
+        function updateQuestionStatsDatabase(key, blankType, resultValue, isOverwrite = false) {
+            let questionStats = JSON.parse(localStorage.getItem('calc_question_stats')) || {};
+            if (!questionStats[key]) {
+                questionStats[key] = { a: [], l: [], r: [] };
+            }
+            if (!questionStats[key][blankType]) {
+                questionStats[key][blankType] = [];
+            }
+
+            if (isOverwrite && questionStats[key][blankType].length > 0) {
+                // 解き直し正解による「0」への上書き要求の場合、配列の最後尾（さっき入れた-1）を書き換える
+                questionStats[key][blankType][questionStats[key][blankType].length - 1] = resultValue;
+            } else {
+                // 通常の新規追加（初手正解の1、または初手ミスの-1）
+                questionStats[key][blankType].push(resultValue);
+                if (questionStats[key][blankType].length > 3) {
+                    questionStats[key][blankType].shift(); 
                 }
             }
-            // 2回目、3回目の連続ミス時は上のif文をスルーするため、LocalStorageへの多重書き込みは一切発生しません。
+            localStorage.setItem('calc_question_stats', JSON.stringify(questionStats));
+        }
 
-            isCurrentProblemWrongOnce = true;
-            userTypedInput = "";
-            answerInputBox.textContent = "";
-            isProcessingAnswer = false;
-        }
-    }
-
-    // 履歴データベース更新用関数（上書き対応版）
-    function updateQuestionStatsDatabase(key, blankType, resultValue, isOverwrite = false) {
-        let questionStats = JSON.parse(localStorage.getItem('calc_question_stats')) || {};
-        if (!questionStats[key]) {
-            questionStats[key] = { a: [], l: [], r: [] };
-        }
-        if (!questionStats[key][blankType]) {
-            questionStats[key][blankType] = [];
-        }
-        
-        if (isOverwrite && questionStats[key][blankType].length > 0) {
-            // 解き直し正解による「0」への上書き要求の場合、配列の最後尾（さっき入れた-1）を書き換える
-            questionStats[key][blankType][questionStats[key][blankType].length - 1] = resultValue;
-        } else {
-            // 通常の新規追加（初手正解の1、または初手ミスの-1）
-            questionStats[key][blankType].push(resultValue);
-            if (questionStats[key][blankType].length > 3) {
-                questionStats[key][blankType].shift(); 
+        function saveProblemToPersistentPool(prob) {
+            let pool = JSON.parse(localStorage.getItem('calc_incorrect_pool')) || [];
+            const isDuplicate = pool.some(p => p.num1 === prob.num1 && p.num2 === prob.num2 && p.op === prob.op && p.blankType === prob.blankType);
+            if (!isDuplicate) {
+                pool.push(prob);
+                localStorage.setItem('calc_incorrect_pool', JSON.stringify(pool));
             }
-        }
-        localStorage.setItem('calc_question_stats', JSON.stringify(questionStats));
-    }
-
-    function saveProblemToPersistentPool(prob) {
-        let pool = JSON.parse(localStorage.getItem('calc_incorrect_pool')) || [];
-        const isDuplicate = pool.some(p => p.num1 === prob.num1 && p.num2 === prob.num2 && p.op === prob.op && p.blankType === prob.blankType);
-        if (!isDuplicate) {
-            pool.push(prob);
-            localStorage.setItem('calc_incorrect_pool', JSON.stringify(pool));
-        }
-        updateReviewBadgeCount();
-    }
-
-    function removeProblemFromPersistentPool(prob) {
-        let pool = JSON.parse(localStorage.getItem('calc_incorrect_pool')) || [];
-        pool = pool.filter(p => !(p.num1 === prob.num1 && p.num2 === prob.num2 && p.op === prob.op && p.blankType === prob.blankType));
-        localStorage.setItem('calc_incorrect_pool', JSON.stringify(pool));
-        updateReviewBadgeCount();
-    }
-
-    function triggerFeedback(symbol) {
-        feedbackText.textContent = symbol;
-        feedbackText.classList.remove('hidden');
-        if (symbol === '◯') formulaCard.classList.add('correct-flash');
-        else formulaCard.classList.add('incorrect-flash');
-        
-        setTimeout(() => {
-            feedbackText.classList.add('hidden');
-            formulaCard.classList.remove('correct-flash', 'incorrect-flash');
-        }, FLASH_DURATION);
-    }
-
-    function endGame() {
-        clearInterval(timerInterval);
-
-        if (currentAppMode === "normal") {
-            const totalTimeSec = parseFloat(((Date.now() - startTime) / 1000).toFixed(1));
-            const avgSpeed = parseFloat((totalTimeSec / totalQuestions).toFixed(2));
-
-            document.getElementById('res-total-time').textContent = `${Math.floor(totalTimeSec / 60)}分${Math.floor(totalTimeSec % 60)}秒`;
-            document.getElementById('res-wrong-count').textContent = `${wrongCount}回`;
-            document.getElementById('res-avg-speed').textContent = `${avgSpeed}秒`;
-
-            resultTitle.textContent = "結果発表 🎉";
-            basicStatsBox.classList.add('hidden');
-            normalStatsBox.classList.remove('hidden');
-            reviewStatsBox.classList.add('hidden');
-
-            if (currentRoundWrongPool.length > 0) {
-                instantReviewBtn.textContent = `間違えた問題 (${currentRoundWrongPool.length}問) を今すぐ復習する`;
-                instantReviewBtn.classList.remove('hidden');
-            } else {
-                instantReviewBtn.classList.add('hidden');
-            }
-
-            const timestamp = new Date().toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
-            const newRecord = {
-                date: timestamp,
-                opMode: lastPlayedOp,
-                rangeMode: lastPlayedRange,
-                totalQuestions: totalQuestions,
-                wrongCount: wrongCount,
-                avgSpeed: avgSpeed,
-                rawTimestamp: Date.now()
-            };
-
-            let currentRecords = JSON.parse(localStorage.getItem('calc_training_records')) || [];
-            currentRecords.push(newRecord);
-            localStorage.setItem('calc_training_records', JSON.stringify(currentRecords));
-
-        } else if (currentAppMode === "basic") {
-            resultTitle.textContent = "基礎モード終了！ 🎯";
-            basicStatsBox.classList.remove('hidden');
-            normalStatsBox.classList.add('hidden');
-            reviewStatsBox.classList.add('hidden');
-
-            // 基礎モード側
-            document.getElementById('res-basic-count').textContent = `${totalQuestions}問`;
-            document.getElementById('res-basic-wrong').textContent = `${wrongCount}回`;
-            document.getElementById('res-correct-rate').textContent = `${(((totalQuestions - wrongCount) / totalQuestions) * 100).toFixed(1)}%`;
-
-            if (currentRoundWrongPool.length > 0) {
-                instantReviewBtn.textContent = `間違えた問題 (${currentRoundWrongPool.length}問) を今すぐ復習する`;
-                instantReviewBtn.classList.remove('hidden');
-            } else {
-                instantReviewBtn.classList.add('hidden');
-            }
-        } else {
-            resultTitle.textContent = "復習お疲れ様でした！ ✨";
-            basicStatsBox.classList.add('hidden');
-            normalStatsBox.classList.add('hidden');
-            reviewStatsBox.classList.remove('hidden');
-            
-            document.getElementById('res-review-count').textContent = `${totalQuestions}問`;
-            document.getElementById('res-review-wrong').textContent = `${wrongCount}回`;
-            
-            instantReviewBtn.classList.add('hidden');
-        }
-
-        switchView(resultView);
-    }
-
-    // ==================== 戻る & クリア制御 ====================
-    backSetupBtn.addEventListener('click', () => {
-        updateReviewBadgeCount();
-        if (currentAppMode === "basic") {
-            modeBasicBtn.click();
-        } else if (currentAppMode === "normal") {
-            modeNormalBtn.click();
-        }
-        switchView(setupView);
-    });
-    
-    clearDataBtn.addEventListener('click', () => {
-        if(confirm("全モードの学習データ、履歴、苦手統計をすべて消去しますか？")) {
-            localStorage.removeItem('calc_training_records');
-            localStorage.removeItem('calc_incorrect_pool');
-            localStorage.removeItem('calc_question_stats');
             updateReviewBadgeCount();
-            renderRecords();
-            alert('消去が完了しました。');
-        }
-    });
-
-    filterOp.addEventListener('change', renderRecords);
-    filterRange.addEventListener('change', renderRecords);
-    graphLimitSelect.addEventListener('change', renderRecords);
-
-    function renderRecords() {
-        let allRecords = JSON.parse(localStorage.getItem('calc_training_records')) || [];
-        allRecords.sort((a, b) => a.rawTimestamp - b.rawTimestamp);
-
-        const targetOp = filterOp.value;
-        const targetRange = filterRange.value;
-        
-        let filteredRecords = allRecords.filter(r => r.opMode === targetOp && r.rangeMode === targetRange);
-
-        const limit = graphLimitSelect.value;
-        if (limit !== 'all') {
-            const numLimit = parseInt(limit);
-            filteredRecords = filteredRecords.slice(-numLimit);
         }
 
-        const latestRecords = [...filteredRecords].reverse();
-        const tbody = document.getElementById('history-tbody');
-        tbody.innerHTML = '';
-
-        latestRecords.forEach(r => {
-            let opDisplay = r.opMode;
-            if (r.opMode === 'rand-pm') opDisplay = '±ランダム';
-            else if (r.opMode === 'rand-md') opDisplay = '×÷ランダム';
-            else if (r.opMode === 'rand-all') opDisplay = '四則ランダム';
-            else if (r.opMode === 'mushikui-pm') opDisplay = '虫食い(±)';
-            else if (r.opMode === 'mushikui-pd') opDisplay = '虫食い(×÷)';
-            else if (r.opMode === 'mushikui-all') opDisplay = '虫食い(四則)';
-
-            let rangeDisplay = r.rangeMode === 'positive' ? '正のみ' : '正負';
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${r.date}</td>
-                <td><span class="badge-op">${opDisplay}</span></td>
-                <td><span class="badge-range">${rangeDisplay}</span></td>
-                <td>${r.totalQuestions}問</td>
-                <td>${r.wrongCount}回</td>
-                <td><strong>${r.avgSpeed}秒</strong></td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        const labels = filteredRecords.map(r => r.date);
-        const speedData = filteredRecords.map(r => r.avgSpeed);
-        const wrongRateData = filteredRecords.map(r => parseFloat(((r.wrongCount / r.totalQuestions) * 100).toFixed(1)));
-
-        if (chartInstance) chartInstance.destroy();
-
-        const ctx = document.getElementById('record-chart').getContext('2d');
-        if(filteredRecords.length === 0) {
-            ctx.clearRect(0, 0, 400, 180);
-            return;
+        function removeProblemFromPersistentPool(prob) {
+            let pool = JSON.parse(localStorage.getItem('calc_incorrect_pool')) || [];
+            pool = pool.filter(p => !(p.num1 === prob.num1 && p.num2 === prob.num2 && p.op === prob.op && p.blankType === prob.blankType));
+            localStorage.setItem('calc_incorrect_pool', JSON.stringify(pool));
+            updateReviewBadgeCount();
         }
 
-        chartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '誤答率 (%)',
-                        data: wrongRateData,
-                        backgroundColor: 'rgba(224, 109, 109, 0.3)',
-                        borderColor: 'rgba(224, 109, 109, 1)',
-                        borderWidth: 1,
-                        yAxisID: 'y-wrong',
-                        order: 2
-                    },
-                    {
-                        label: '速度 (秒/問)',
-                        data: speedData,
-                        type: 'line',
-                        borderColor: '#4a90e2',
-                        backgroundColor: '#4a90e2',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        fill: false,
-                        yAxisID: 'y-speed',
-                        order: 1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    'y-speed': { type: 'linear', position: 'left', title: { display: true, text: '秒/問', font: { size: 10 } }, min: 0 },
-                    'y-wrong': { type: 'linear', position: 'right', title: { display: true, text: '誤答率(%)', font: { size: 10 } }, min: 0, max: 100, grid: { drawOnChartArea: false } },
-                    x: { ticks: { maxRotation: 45, minRotation: 45, font: { size: 9 } } }
-                },
-                plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } }
+        function triggerFeedback(symbol) {
+            feedbackText.textContent = symbol;
+            feedbackText.classList.remove('hidden');
+            if (symbol === '◯') formulaCard.classList.add('correct-flash');
+            else formulaCard.classList.add('incorrect-flash');
+
+            setTimeout(() => {
+                feedbackText.classList.add('hidden');
+                formulaCard.classList.remove('correct-flash', 'incorrect-flash');
+            }, FLASH_DURATION);
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+
+            if (currentAppMode === "normal") {
+                const totalTimeSec = parseFloat(((Date.now() - startTime) / 1000).toFixed(1));
+                const avgSpeed = parseFloat((totalTimeSec / totalQuestions).toFixed(2));
+
+                document.getElementById('res-total-time').textContent = `${Math.floor(totalTimeSec / 60)}分${Math.floor(totalTimeSec % 60)}秒`;
+                document.getElementById('res-wrong-count').textContent = `${wrongCount}回`;
+                document.getElementById('res-avg-speed').textContent = `${avgSpeed}秒`;
+
+                resultTitle.textContent = "結果発表 🎉";
+                basicStatsBox.classList.add('hidden');
+                normalStatsBox.classList.remove('hidden');
+                reviewStatsBox.classList.add('hidden');
+
+                if (currentRoundWrongPool.length > 0) {
+                    instantReviewBtn.textContent = `間違えた問題 (${currentRoundWrongPool.length}問) を今すぐ復習する`;
+                    instantReviewBtn.classList.remove('hidden');
+                } else {
+                    instantReviewBtn.classList.add('hidden');
+                }
+
+                const timestamp = new Date().toLocaleString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
+                const newRecord = {
+                    date: timestamp,
+                    opMode: opMode,
+                    rangeMode: rangeMode,
+                    totalQuestions: totalQuestions,
+                    wrongCount: wrongCount,
+                    avgSpeed: avgSpeed,
+                    rawTimestamp: Date.now()
+                };
+
+                let currentRecords = JSON.parse(localStorage.getItem('calc_training_records')) || [];
+                currentRecords.push(newRecord);
+                localStorage.setItem('calc_training_records', JSON.stringify(currentRecords));
+
+            } else if (currentAppMode === "basic") {
+                resultTitle.textContent = "基礎モード終了！ 🎯";
+                basicStatsBox.classList.remove('hidden');
+                normalStatsBox.classList.add('hidden');
+                reviewStatsBox.classList.add('hidden');
+
+                // 基礎モード側
+                document.getElementById('res-basic-count').textContent = `${totalQuestions}問`;
+                document.getElementById('res-basic-wrong').textContent = `${wrongCount}回`;
+                document.getElementById('res-correct-rate').textContent = `${(((totalQuestions - wrongCount) / totalQuestions) * 100).toFixed(1)}%`;
+
+                if (currentRoundWrongPool.length > 0) {
+                    instantReviewBtn.textContent = `間違えた問題 (${currentRoundWrongPool.length}問) を今すぐ復習する`;
+                    instantReviewBtn.classList.remove('hidden');
+                } else {
+                    instantReviewBtn.classList.add('hidden');
+                }
+            } else {
+                resultTitle.textContent = "復習お疲れ様でした！ ✨";
+                basicStatsBox.classList.add('hidden');
+                normalStatsBox.classList.add('hidden');
+                reviewStatsBox.classList.remove('hidden');
+
+                document.getElementById('res-review-count').textContent = `${totalQuestions}問`;
+                document.getElementById('res-review-wrong').textContent = `${wrongCount}回`;
+
+                instantReviewBtn.classList.add('hidden');
+            }
+
+            switchView(resultView);
+        }
+
+        // ==================== 戻る & クリア制御 ====================
+            backSetupBtn.addEventListener('click', () => {
+                updateReviewBadgeCount();
+                if (currentAppMode === "basic") {
+                    modeBasicBtn.click();
+                } else if (currentAppMode === "normal") {
+                    modeNormalBtn.click();
+                }
+                switchView(setupView);
+            });
+
+        clearDataBtn.addEventListener('click', () => {
+            if(confirm("全モードの学習データ、履歴、苦手統計をすべて消去しますか？")) {
+                localStorage.removeItem('calc_training_records');
+                localStorage.removeItem('calc_incorrect_pool');
+                localStorage.removeItem('calc_question_stats');
+                updateReviewBadgeCount();
+                renderRecords();
+                alert('消去が完了しました。');
             }
         });
-    }
+
+        filterOp.addEventListener('change', renderRecords);
+        filterRange.addEventListener('change', renderRecords);
+        graphLimitSelect.addEventListener('change', renderRecords);
+
+        function renderRecords() {
+            let allRecords = JSON.parse(localStorage.getItem('calc_training_records')) || [];
+            allRecords.sort((a, b) => a.rawTimestamp - b.rawTimestamp);
+
+            const targetOp = filterOp.value;
+            const targetRange = filterRange.value;
+
+            let filteredRecords = allRecords.filter(r => r.opMode === targetOp && r.rangeMode === targetRange);
+
+            const limit = graphLimitSelect.value;
+            if (limit !== 'all') {
+                const numLimit = parseInt(limit);
+                filteredRecords = filteredRecords.slice(-numLimit);
+            }
+
+            const latestRecords = [...filteredRecords].reverse();
+            const tbody = document.getElementById('history-tbody');
+            tbody.innerHTML = '';
+
+            latestRecords.forEach(r => {
+                let opDisplay = r.opMode;
+                if (r.opMode === 'rand-pm') opDisplay = '±ランダム';
+                else if (r.opMode === 'rand-md') opDisplay = '×÷ランダム';
+                else if (r.opMode === 'rand-all') opDisplay = '四則ランダム';
+                else if (r.opMode === 'mushikui-pm') opDisplay = '虫食い(±)';
+                else if (r.opMode === 'mushikui-pd') opDisplay = '虫食い(×÷)';
+                else if (r.opMode === 'mushikui-all') opDisplay = '虫食い(四則)';
+
+                let rangeDisplay = r.rangeMode === 'positive' ? '正のみ' : '正負';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.date}</td>
+                    <td><span class="badge-op">${opDisplay}</span></td>
+                    <td><span class="badge-range">${rangeDisplay}</span></td>
+                    <td>${r.totalQuestions}問</td>
+                    <td>${r.wrongCount}回</td>
+                    <td><strong>${r.avgSpeed}秒</strong></td>
+                    `;
+                tbody.appendChild(tr);
+            });
+
+            const labels = filteredRecords.map(r => r.date);
+            const speedData = filteredRecords.map(r => r.avgSpeed);
+            const wrongRateData = filteredRecords.map(r => parseFloat(((r.wrongCount / r.totalQuestions) * 100).toFixed(1)));
+
+            if (chartInstance) chartInstance.destroy();
+
+            const ctx = document.getElementById('record-chart').getContext('2d');
+            if(filteredRecords.length === 0) {
+                ctx.clearRect(0, 0, 400, 180);
+                return;
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '誤答率 (%)',
+                            data: wrongRateData,
+                            backgroundColor: 'rgba(224, 109, 109, 0.3)',
+                            borderColor: 'rgba(224, 109, 109, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y-wrong',
+                            order: 2
+                        },
+                        {
+                            label: '速度 (秒/問)',
+                            data: speedData,
+                            type: 'line',
+                            borderColor: '#4a90e2',
+                            backgroundColor: '#4a90e2',
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            fill: false,
+                            yAxisID: 'y-speed',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        'y-speed': { type: 'linear', position: 'left', title: { display: true, text: '秒/問', font: { size: 10 } }, min: 0 },
+                        'y-wrong': { type: 'linear', position: 'right', title: { display: true, text: '誤答率(%)', font: { size: 10 } }, min: 0, max: 100, grid: { drawOnChartArea: false } },
+                        x: { ticks: { maxRotation: 45, minRotation: 45, font: { size: 9 } } }
+                    },
+                    plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } }
+                }
+            });
+        }
         function showAlert(message, title = "お知らせ") {
             return new Promise((resolve) => {
+
+    // 【-1, 0, 1 変位システム完全実装＋重複保存ガード】
                 const modal = document.getElementById('custom-modal');
                 const modalTitle = document.getElementById('modal-title');
                 const modalMsg = document.getElementById('modal-message');
@@ -917,12 +909,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 okBtn.addEventListener('click', onOk);
             });
         }
-        // function addChips() {
-            const chipGroup = document.getElementById('chip-container');
-            for(let i = 0; i < 9; i++){
-                const lab = document.createElement('label');
-                lab.className = "custom-chip"
-                const inp = document.createElement('input');
+
+        // 以降読込み時に自動的に実行されます．
+        const chipGroup = document.getElementById('chip-container');
+        for(let i = 0; i < 9; i++){
+            const lab = document.createElement('label');
+            lab.className = "custom-chip"
+            const inp = document.createElement('input');
             inp.type = "checkbox";
             inp.name = "tags";
             inp.value = i + 1;
@@ -933,5 +926,4 @@ document.addEventListener('DOMContentLoaded', () => {
             lab.appendChild(sp);
             chipGroup.appendChild(lab);
         }
-    // }
 });

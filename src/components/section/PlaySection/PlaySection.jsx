@@ -77,7 +77,6 @@ function PlaySection({
                     <SetupView 
                         onStart={handleStartSetup}
                         mode={mode} setMode={setMode}
-                        
                         normalSettings={normalSettings} setNormalSettings={setNormalSettings}
                         basicSettings={basicSettings} setBasicSettings={setBasicSettings}
                         reviewSettings={reviewSettings} setReviewSettings={setReviewSettings}

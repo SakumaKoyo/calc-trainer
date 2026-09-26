@@ -1,0 +1,175 @@
+/**/
+/* .fixed-tenkey { */
+/*     position: fixed; */
+/*     align-items: center;  */
+/*     bottom: calc(max(10px, env(safe-area-inset-bottom)));  */
+/*     left: 50%;  */
+/*     transform: translateX(-50%); */
+/*     width: 94%;  */
+/*     max-width: 480px; */
+/*     background: #e4e7eb; */
+/*     padding: 12px; */
+/*     box-shadow: 0 6px 24px rgba(0,0,0,0.12);  */
+/*     border-radius: 20px;  */
+/*     z-index: 100; */
+/*     display: flex; */
+/*     justify-content: center; */
+/*     touch-action: none; */
+/* } */
+/* .tenkey-grid { width: 100%; max-width: 450px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; } */
+/**/
+/* .key-btn {  */
+/*     padding: 16px 0;  */
+/*     font-size: 24px;  */
+/*     font-weight: bold;  */
+/*     background: #ffffff;  */
+/*     border: none;  */
+/*     border-radius: 14px;  */
+/*     box-shadow: 0 3px 0 #cbd5e1;  */
+/*     color: #333;  */
+/*     -webkit-user-select: none; */
+/*     user-select: none; */
+/*     touch-action: manipulation; */
+/* } */
+/* .key-btn:active { background: #f1f5f9; transform: translateY(2px); box-shadow: 0 1px 0 #cbd5e1; } */
+/* .key-btn.action { background: #cbd5e1; box-shadow: 0 3px 0 #94a3b8; } */
+/* .key-btn.action:active { background: #94a3b8; } */
+/* .key-btn.enter { grid-column: span 3; background: var(--primary); color: white; padding: 14px 0; box-shadow: 0 4px 0 var(--primary-dark); } */
+/* .key-btn.enter:active { background: var(--primary-dark); } */
+
+
+/* ========================================
+   TenKey 共通
+   ======================================== */
+
+.fixed-tenkey {
+    position: fixed;
+    align-items: center;
+    bottom: calc(max(10px, env(safe-area-inset-bottom)));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 94%;
+    max-width: 480px;
+    background: #e4e7eb;
+    padding: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+    border-radius: 20px;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    touch-action: none;
+}
+
+.tenkey-grid {
+    width: 100%;
+    max-width: 450px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.key-btn {
+    padding: 16px 0;
+    font-size: 24px;
+    font-weight: bold;
+    background: #ffffff;
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 3px 0 #cbd5e1;
+    color: #333;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+.key-btn:active {
+    background: #f1f5f9;
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #cbd5e1;
+}
+
+.key-btn.action {
+    background: #cbd5e1;
+    box-shadow: 0 3px 0 #94a3b8;
+}
+
+.key-btn.action:active {
+    background: #94a3b8;
+}
+
+.key-btn.enter {
+    grid-column: span 3;
+    background: var(--primary);
+    color: white;
+    padding: 14px 0;
+    box-shadow: 0 4px 0 var(--primary-dark);
+}
+
+.key-btn.enter:active {
+    background: var(--primary-dark);
+}
+
+
+/* ========================================
+   Normal TenKey
+   ======================================== */
+
+.normal.key-btn {
+    /* 通常の数字入力 */
+}
+
+.normal.key-btn.action {
+    /* 負号・C */
+}
+
+.normal.key-btn.enter {
+    /* 決定 */
+}
+
+
+/* ========================================
+   Fractional TenKey
+   ======================================== */
+
+/* 分子／分母切り替えボタン */
+.fractional.key-btn.switch {
+    grid-column: span 3;
+}
+
+/* 分数用の決定ボタン */
+.fractional.key-btn.enter {
+    grid-column: span 3;
+}
+
+
+/* ========================================
+   Choice
+   ======================================== */
+
+.choice-btn {
+    padding: 16px 0;
+    font-size: 24px;
+    font-weight: bold;
+    height: 80px;
+    background: #ffffff;
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 3px 0 #cbd5e1;
+    color: #333;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+.choice-btn:active {
+    background: #f1f5f9;
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #cbd5e1;
+}
+.choice-grid {
+    width: 100%;
+    max-width: 450px;
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 10px;
+}

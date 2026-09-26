@@ -1,0 +1,39 @@
+/* ボタン（楕円）のベース設定 */
+.chip-label {
+  cursor: pointer;
+  user-select: none;
+  font-family: sans-serif;
+}
+
+/* デフォルトのチェックボックスを完全に非表示にする */
+.chip-label input[type="checkbox"] {
+  position: absolute;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+}
+
+/* 楕円ボタンの見た目 */
+.chip-label .chip-text {
+  display: inline-block;
+  padding: 8px 18px;
+  width: 100%;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  background-color: #f2f2f2;
+  border: 1px solid transparent;
+  border-radius: 100px; /* 完全に丸い楕円にする */
+  transition: all 0.2s ease;
+}
+
+/* 選択された（チェックが入った）ときのスタイル */
+.chip-label input[type="checkbox"]:checked + .chip-text {
+  background-color: #eef6ff; /* 薄い青 */
+  color: var(--primary);            /* 鮮やかな青 */
+  border-color: var(--primary);     /* 青い枠線 */
+}

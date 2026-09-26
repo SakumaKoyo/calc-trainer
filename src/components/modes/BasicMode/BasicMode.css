@@ -1,0 +1,8 @@
+/* グループ全体のレイアウト（横並びで折り返しあり） */
+.chip-container {
+  display: grid;
+  /* flex-wrap: wrap; */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}

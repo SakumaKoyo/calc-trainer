@@ -148,10 +148,20 @@ function GameView({mode, settings, setResult, onFinish, questions}) {
                 <div className="game-header">
                     <span id="progress-display">第 {currentIdx} / {questions.length} 問</span>
                     <span id="timer-display">
+                        {mode === 'normal' && (
                         <div>
                             {Math.floor(time / 1000 / 60)}:
                             {String(Math.floor(time / 1000) % 60).padStart(2, "0")}
                         </div>
+                        )}{mode === 'basic' && (
+                        <div>
+                            基礎モード
+                        </div>
+                        )}{mode === 'review' && (
+                        <div>
+                            復習モード
+                        </div>
+                        )}
                     </span>
                 </div>
                 

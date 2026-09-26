@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import InputGroup from "../../InputGroup/InputGroup";
 import Chart from "chart.js/auto";
+import Modal from "/src/components/Modal/Modal";
 
 function RecordSection({ normalSettings = { op: '+', range: 'positive' } }) {
     const [filterOp, setFilterOp] = useState(normalSettings.op);
     const [filterRange, setFilterRange] = useState(normalSettings.range);
     const [filterCount, setFilterCount] = useState(20);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     
     const [records, setRecords] = useState([]);
     
@@ -98,13 +100,14 @@ function RecordSection({ normalSettings = { op: '+', range: 'positive' } }) {
     }, [records]);
 
     function removeAllRecords() {
-        if (window.confirm("本当に全ての記録を削除しますか？\nこの操作は元に戻せません。")) {
-            localStorage.removeItem("calc_training_records");
-            localStorage.removeItem("calc_question_stats");
-            localStorage.removeItem("calc_incorrect_questions");
-            alert("全ての記録を削除しました。");
-            loadRecords();
-        }
+        setIsModalOpen(true);
+        // if (window.confirm("本当に全ての記録を削除しますか？\nこの操作は元に戻せません。")) {
+        //     localStorage.removeItem("calc_training_records");
+        //     localStorage.removeItem("calc_question_stats");
+        //     localStorage.removeItem("calc_incorrect_questions");
+        //     alert("全ての記録を削除しました。");
+        //     loadRecords();
+        // }
     }
 
     const getOpDisplay = (opMode) => {
@@ -206,6 +209,20 @@ function RecordSection({ normalSettings = { op: '+', range: 'positive' } }) {
                     </table>
                 </div>
             </div>
+            {isModalOpen && (
+                <Modal
+                    title="確認"
+                    message="本当に全ての記録を削除しますか？この操作は元に戻せません。"
+                    onCancel={() => setIsModalOpen(false)}
+                    onOk={() => {
+                        localStorage.removeItem("calc_training_records");
+                        localStorage.removeItem("calc_question_stats");
+                        localStorage.removeItem("calc_incorrect_questions");
+                        setIsModalOpen(false);
+                        loadRecords();
+                    }}
+                />
+            )}
         </section>
     );
 }

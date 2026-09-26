@@ -44,7 +44,7 @@ function SetupView({
                     className={`mode-toggle-btn ${ mode === "review" ? "active" : "" }`}
                     onClick={() => setMode("review")}
                     >
-                    復習（{getIncorrectQuestions().length}）
+                    復習（{numIncorrect}）
                     </button>
 
                 )}

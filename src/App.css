@@ -280,79 +280,9 @@ button.review-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(-
         font-size: 16px;
     }
 }
-
-
-/* 背景の黒透過レイヤー */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-    touch-action: none;
-}
-
-/* モーダル枠 */
-.modal-card {
-    background: var(--card-bg);
-    border-radius: 20px;
-    padding: 24px;
-    width: 100%;
-    max-width: 320px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    text-align: center;
-    animation: modal-pop 0.15s ease-out;
-}
-
-@keyframes modal-pop {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-.modal-title {
-    font-size: 17px;
-    color: var(--text-color);
-    margin-bottom: 10px;
-    margin-top: 0;
-}
-
-.modal-message {
-    font-size: 14px;
-    color: #666;
-    line-height: 1.5;
-    margin-bottom: 20px;
-}
-
-.modal-actions {
-    display: flex;
-}
-
-.modal-btn {
-    flex: 1;
-    padding: 12px 0;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.modal-btn.ok {
-    background: var(--primary); /* 削除用なら赤、共通なら primary */
-    color: white;
-}
-
-.modal-btn:active {
-    transform: scale(0.98);
-}
 /* 無効化されているときのボタンスタイル */
 .tab-btn:disabled {
     opacity: 0.5;
-    /* background: #edf2f7; /* お好みのグレー背景色 */ */
     color: #a0aec0;      /* 薄い文字色 */
     cursor: not-allowed;
     box-shadow: none;

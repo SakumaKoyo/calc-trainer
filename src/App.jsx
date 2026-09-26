@@ -55,16 +55,6 @@ function App() {
       { tab === "record" && <RecordSection normalSettings={normalSettings}/> }
     </div>
 
-    {/*カスタム確認モーダル*/}
-    <div id="custom-modal" className="modal-overlay hidden">
-        <div className="modal-card">
-            <h3 id="modal-title" className="modal-title">確認</h3>
-            <p id="modal-message" className="modal-message"></p>
-            <div className="modal-actions">
-                <button type="button" id="modal-ok-btn" className="modal-btn ok">OK</button>
-            </div>
-        </div>
-    </div>
     </>
   )
 }

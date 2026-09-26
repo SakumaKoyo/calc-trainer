@@ -6,6 +6,7 @@ import ResultView from "./View/ResultView";
 import { genQuestions } from "/src/utils/genQuestions";
 import useSound from 'use-sound';
 import countdownSound from '/sound/Countdown.mp3';
+import Modal from "/src/components/Modal/Modal";
 
 function PlaySection({ 
     setIsPlaying,
@@ -26,9 +27,14 @@ function PlaySection({
     const [questions, setQuestions] = useState([]);
     const firstMode = useRef(mode);
     const [soundCountdownPlay] = useSound(countdownSound, { volume: 0.5 });
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // ① ゲーム開始ボタン（SetupView）が押されたときの処理
     const handleStartSetup = () => {
+        if (mode === 'basic' && !basicSettings.timesTable.some(v => v)) {
+            setIsModalOpen(true);
+            return;
+        }
         let currentSettings = normalSettings;
         if (mode === 'basic') currentSettings = basicSettings;
         if (mode === 'review') currentSettings = reviewSettings;
@@ -108,6 +114,16 @@ function PlaySection({
                 )}
                 
             </div>
+
+            {isModalOpen && (
+                <Modal
+                    title="確認"
+                    message="九九の段を1つ以上選択してください。"
+                    onOk={() => {
+                        setIsModalOpen(false);
+                    }}
+                />
+            )}
         </section>
     );
 }

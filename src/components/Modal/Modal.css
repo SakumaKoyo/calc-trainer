@@ -1,0 +1,104 @@
+/* モーダル全体を覆う背景 */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.45);
+
+    touch-action: none;
+}
+
+/* 非表示 */
+.modal-overlay.hidden {
+    display: none;
+}
+
+/* モーダル本体 */
+.modal-card {
+    width: 100%;
+    max-width: 320px;
+    padding: 24px;
+
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+
+    text-align: center;
+
+    animation: modal-pop 0.15s ease-out;
+}
+
+/* タイトル */
+.modal-title {
+    margin: 0 0 10px;
+
+    color: var(--text-color);
+    font-size: 17px;
+}
+
+/* メッセージ */
+.modal-message {
+    margin: 0 0 20px;
+
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ボタン */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* 共通ボタン */
+.modal-btn {
+    flex: 1;
+
+    padding: 12px 0;
+
+    border: none;
+    border-radius: 12px;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+/* OKボタン */
+.modal-btn.ok {
+    background: var(--primary);
+    color: white;
+}
+
+/* キャンセルボタン */
+.modal-btn.cancel {
+    background: #e5e5e5;
+    color: #555;
+}
+
+/* ボタンを押したとき */
+.modal-btn:active {
+    transform: scale(0.98);
+}
+
+/* 表示時のアニメーション */
+@keyframes modal-pop {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

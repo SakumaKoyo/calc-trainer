@@ -62,7 +62,7 @@ function Tenkey({
                                 key.id === 'normalKey-minus' ? 
                                     () => setAns1(prev => prev.startsWith('-') ? prev.slice(1) : '-' + prev) :
                                     key.id === 'normalKey-enter' ? onSubmit :
-                                    () => setAns1(prev => prev + key.label)}
+                                    () => setAns1(prev => prev.length < 5 ? prev + key.label : prev)}
                         >
                                 {key.label}
                         </button>

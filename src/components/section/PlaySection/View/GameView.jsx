@@ -127,7 +127,7 @@ function GameView({mode, settings, setResult, onFinish, questions}) {
             onFinish();
         }
             isChecking.current = false; // チェック中フラグを下ろす
-        }, FLASH_DURATION - 50);
+        }, FLASH_DURATION);
     }
 
     function triggerFeedback(symbol) {

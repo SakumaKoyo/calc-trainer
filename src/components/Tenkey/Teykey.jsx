@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import './Tenkey.css'
 function Tenkey({
     type,
@@ -6,21 +7,39 @@ function Tenkey({
     setAns2,
     setAns3
 }) {
+
+    const [hasNumber, setHasNumber] = useState(false); // 数字が入力されているかどうかの状態
     // const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '負(-)', '0', 'C', '決定'];
     const normalKeys = [
-        { id: 'normalKey-1', label: '1', className: 'normal key-btn' },
-        { id: 'normalKey-2', label: '2', className: 'normal key-btn' },
-        { id: 'normalKey-3', label: '3', className: 'normal key-btn' },
-        { id: 'normalKey-4', label: '4', className: 'normal key-btn' },
-        { id: 'normalKey-5', label: '5', className: 'normal key-btn' },
-        { id: 'normalKey-6', label: '6', className: 'normal key-btn' },
-        { id: 'normalKey-7', label: '7', className: 'normal key-btn' },
-        { id: 'normalKey-8', label: '8', className: 'normal key-btn' },
-        { id: 'normalKey-9', label: '9', className: 'normal key-btn' },
-        { id: 'normalKey-minus', label: '負（-）', className: 'normal key-btn action' },
-        { id: 'normalKey-0', label: '0', className: 'normal key-btn' },
-        { id: 'normalKey-clear', label: 'C', className: 'normal key-btn action' },
-        { id: 'normalKey-enter', label: '決定', className: 'normal key-btn enter' }
+        { id: 'key-1', label: '1', className: 'normal key-btn' },
+        { id: 'key-2', label: '2', className: 'normal key-btn' },
+        { id: 'key-3', label: '3', className: 'normal key-btn' },
+        { id: 'key-4', label: '4', className: 'normal key-btn' },
+        { id: 'key-5', label: '5', className: 'normal key-btn' },
+        { id: 'key-6', label: '6', className: 'normal key-btn' },
+        { id: 'key-7', label: '7', className: 'normal key-btn' },
+        { id: 'key-8', label: '8', className: 'normal key-btn' },
+        { id: 'key-9', label: '9', className: 'normal key-btn' },
+        { id: 'key-minus', label: '負（-）', className: 'normal key-btn action' },
+        { id: 'key-0', label: '0', className: 'normal key-btn' },
+        { id: 'key-clear', label: 'C', className: 'normal key-btn action' },
+        { id: 'key-enter', label: '決定', className: 'normal key-btn enter' }
+    ]
+    const decimalKeys = [
+        { id: 'key-1', label: '1', className: 'decimal key-btn' },
+        { id: 'key-2', label: '2', className: 'decimal key-btn' },
+        { id: 'key-3', label: '3', className: 'decimal key-btn' },
+        { id: 'key-4', label: '4', className: 'decimal key-btn' },
+        { id: 'key-5', label: '5', className: 'decimal key-btn' },
+        { id: 'key-6', label: '6', className: 'decimal key-btn' },
+        { id: 'key-7', label: '7', className: 'decimal key-btn' },
+        { id: 'key-8', label: '8', className: 'decimal key-btn' },
+        { id: 'key-9', label: '9', className: 'decimal key-btn' },
+        { id: 'key-minus', label: '負（-）', className: 'decimal key-btn action' },
+        { id: 'key-point', label: '小数点', className: 'decimal key-btn action' },
+        { id: 'key-0', label: '0', className: 'decimal key-btn' },
+        { id: 'key-clear', label: 'C', className: 'decimal key-btn action' },
+        { id: 'key-enter', label: '決定', className: 'decimal key-btn enter' }
     ]
     const choiceKeys = [
         { id: 'choiceKey-A', label: 'A', className: 'choice-btn' },
@@ -34,22 +53,39 @@ function Tenkey({
         label: '分子／分母',
         className: 'fractional key-btn action switch'
     },
-    { id: 'fractionKey-1', label: '1', className: 'fractional key-btn' },
-    { id: 'fractionKey-2', label: '2', className: 'fractional key-btn' },
-    { id: 'fractionKey-3', label: '3', className: 'fractional key-btn' },
-    { id: 'fractionKey-4', label: '4', className: 'fractional key-btn' },
-    { id: 'fractionKey-5', label: '5', className: 'fractional key-btn' },
-    { id: 'fractionKey-6', label: '6', className: 'fractional key-btn' },
-    { id: 'fractionKey-7', label: '7', className: 'fractional key-btn' },
-    { id: 'fractionKey-8', label: '8', className: 'fractional key-btn' },
-    { id: 'fractionKey-9', label: '9', className: 'fractional key-btn' },
-    { id: 'fractionKey-minus', label: '負（-）', className: 'fractional key-btn action' },
-    { id: 'fractionKey-0', label: '0', className: 'fractional key-btn' },
-    { id: 'fractionKey-clear', label: 'C', className: 'fractional key-btn action' },
-    { id: 'fractionKey-enter', label: '決定', className: 'fractional key-btn enter' }
+    { id: 'key-1', label: '1', className: 'fractional key-btn' },
+    { id: 'key-2', label: '2', className: 'fractional key-btn' },
+    { id: 'key-3', label: '3', className: 'fractional key-btn' },
+    { id: 'key-4', label: '4', className: 'fractional key-btn' },
+    { id: 'key-5', label: '5', className: 'fractional key-btn' },
+    { id: 'key-6', label: '6', className: 'fractional key-btn' },
+    { id: 'key-7', label: '7', className: 'fractional key-btn' },
+    { id: 'key-8', label: '8', className: 'fractional key-btn' },
+    { id: 'key-9', label: '9', className: 'fractional key-btn' },
+    { id: 'key-minus', label: '負（-）', className: 'fractional key-btn action' },
+    { id: 'key-0', label: '0', className: 'fractional key-btn' },
+    { id: 'key-clear', label: 'C', className: 'fractional key-btn action' },
+    { id: 'key-enter', label: '決定', className: 'fractional key-btn enter' }
 ];
 
-    if (type === 'normal') {
+    function handleKeyPress(keyId, keyLabel) {
+        if (keyId === 'key-clear') {
+            setAns1("");
+            setHasNumber(false);
+        } else if (keyId === 'key-minus') {
+            setAns1(prev => prev.startsWith('-') ? prev.slice(1) : '-' + prev);
+        } else if (keyId === 'key-point') {
+            setAns1(prev => prev.includes('.') ? prev : prev + '.');
+        } else if (keyId === 'key-enter') {
+            setHasNumber(false);
+            onSubmit();
+        } else {
+            setHasNumber(true);
+            setAns1(prev => prev.length < 5 ? prev + keyLabel : prev);
+        }
+    }
+
+    if (type === 'standard') {
         return (
             <div className="fixed-tenkey">
                 <div className="tenkey-grid" id="tenkey-grid-element">
@@ -57,16 +93,37 @@ function Tenkey({
                         <button 
                             key={key.id} 
                             className={key.className} 
-                            onClick= {
-                                key.id === 'normalKey-clear' ? () => setAns1("") :
-                                key.id === 'normalKey-minus' ? 
-                                    () => setAns1(prev => prev.startsWith('-') ? prev.slice(1) : '-' + prev) :
-                                    key.id === 'normalKey-enter' ? onSubmit :
-                                    () => setAns1(prev => prev.length < 5 ? prev + key.label : prev)}
-                        >
+                            onClick= {() => handleKeyPress(key.id, key.label)}>
                                 {key.label}
                         </button>
                     ))}
+                </div>
+            </div>
+        );
+    } else if (type === 'decimal') {
+        return (
+            <div className="fixed-tenkey">
+                <div className="tenkey-grid" id="decimal-grid-element">
+                    {decimalKeys.map(key => {
+                        // hasNumberに応じて表示するキーを切り替える
+                        if (key.id === 'key-minus' && hasNumber) {
+                            return null;
+                        }
+
+                        if (key.id === 'key-point' && !hasNumber) {
+                            return null;
+                        }
+
+                        return (
+                            <button
+                            key={key.id}
+                            className={key.className}
+                            onClick={() => handleKeyPress(key.id, key.label)}
+                            >
+                            {key.label}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
         );

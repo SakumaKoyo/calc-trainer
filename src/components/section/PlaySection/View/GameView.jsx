@@ -182,7 +182,8 @@ function GameView({mode, settings, setResult, onFinish, questions}) {
             </div>
 
             <Tenkey 
-                type='normal'
+                // type={questions[currentIdx - 1].type}
+                type="standard"
                 onSubmit={() => {
                     checkAnswer();
                 }}
